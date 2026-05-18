@@ -1,9 +1,46 @@
-# CSV
-*.csv
+# ============================================
+# ENTORNO VIRTUAL
+# ============================================
 
-# Python
+venv/
+
+# ============================================
+# VARIABLES DE ENTORNO
+# ============================================
+
+.env
+
+# ============================================
+# LOGS GENERADOS
+# ============================================
+
+logs/*
+!logs/.gitkeep
+
+# ============================================
+# DATOS GENERADOS POR EL PIPELINE
+# ============================================
+
+data/raw/*
+data/processed/*
+data/validated/*
+data/reject/*
+
+# MANTENER ESTRUCTURA
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+!data/validated/.gitkeep
+!data/reject/.gitkeep
+
+# ============================================
+# CACHE PYTHON
+# ============================================
+
 __pycache__/
 *.pyc
 
-# Entorno virtual
-.env/
+# ============================================
+# VS CODE
+# ============================================
+
+.vscode/

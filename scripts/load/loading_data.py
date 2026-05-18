@@ -1,22 +1,31 @@
 # ============================================
-# loading.py
+# loading_data.py
 # ============================================
 
 import pandas as pd
 import logging
 import os
 
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine
 from dotenv import load_dotenv
 
 # ============================================
-# CARGAR VARIABLES DE ENTORNO
+# VARIABLES ENTORNO
 # ============================================
 
 load_dotenv()
 
 # ============================================
-# CONFIGURACIÓN DE LOGS
+# CREAR LOGS
+# ============================================
+
+os.makedirs(
+    "logs",
+    exist_ok=True
+)
+
+# ============================================
+# LOGGING
 # ============================================
 
 logging.basicConfig(
@@ -26,248 +35,284 @@ logging.basicConfig(
 )
 
 # ============================================
-# VARIABLES
+# PATHS
 # ============================================
 
-INPUT_PATH = "data/validated/bank_validated.csv"
+APPROVED_PATH = (
+    "data/validated/bank_validated.csv"
+)
 
-DATABASE_URL = os.getenv("postgresql://neondb_owner:npg_VW9osR4JEDed@ep-jolly-salad-ac1c6utw-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require")
-
-# ============================================
-# SQL CREACIÓN DE TABLAS
-# ============================================
-
-CREATE_CLIENTES_TABLE = """
-CREATE TABLE IF NOT EXISTS clientes (
-
-    cliente_id SERIAL PRIMARY KEY,
-
-    age INTEGER,
-    job VARCHAR(50),
-    marital VARCHAR(20),
-    education VARCHAR(20),
-
-    default_col VARCHAR(5),
-
-    balance INTEGER,
-
-    housing VARCHAR(5),
-    loan VARCHAR(5)
-
-);
-"""
-
-CREATE_CONTACTOS_TABLE = """
-CREATE TABLE IF NOT EXISTS contactos (
-
-    contacto_id SERIAL PRIMARY KEY,
-
-    cliente_id INTEGER REFERENCES clientes(cliente_id),
-
-    contact VARCHAR(20),
-
-    day INTEGER,
-    month VARCHAR(10),
-
-    duration INTEGER,
-    campaign INTEGER
-
-);
-"""
-
-CREATE_CAMPANAS_TABLE = """
-CREATE TABLE IF NOT EXISTS campanas_previas (
-
-    campana_id SERIAL PRIMARY KEY,
-
-    cliente_id INTEGER REFERENCES clientes(cliente_id),
-
-    pdays INTEGER,
-    previous INTEGER,
-
-    poutcome VARCHAR(20)
-
-);
-"""
-
-CREATE_SUSCRIPCIONES_TABLE = """
-CREATE TABLE IF NOT EXISTS suscripciones (
-
-    suscripcion_id SERIAL PRIMARY KEY,
-
-    cliente_id INTEGER REFERENCES clientes(cliente_id),
-
-    deposit VARCHAR(5)
-
-);
-"""
+REJECTED_PATH = (
+    "data/reject/bank_rejected.csv"
+)
 
 # ============================================
-# FUNCIÓN PRINCIPAL
+# DATABASE
+# ============================================
+
+DATABASE_URL = os.getenv(
+    "DATABASE_URL"
+)
+
+# ============================================
+# LOAD
 # ============================================
 
 def load_data():
 
     try:
 
-        logging.info("===================================")
-        logging.info("INICIANDO CARGA A NEON")
-        logging.info("===================================")
+        print(
+            "Iniciando carga..."
+        )
 
-        # Validar conexión
+        logging.info(
+            "==================================="
+        )
+
+        logging.info(
+            "INICIO LOAD"
+        )
+
+        logging.info(
+            "==================================="
+        )
+
+        # ============================================
+        # VALIDAR DB
+        # ============================================
+
         if not DATABASE_URL:
-            raise ValueError("DATABASE_URL no encontrada")
 
-        # Leer CSV
-        df = pd.read_csv(INPUT_PATH)
+            raise ValueError(
+                "DATABASE_URL no encontrada"
+            )
 
-        logging.info(f"Archivo leído correctamente: {INPUT_PATH}")
-        logging.info(f"Total registros: {df.shape[0]}")
-
-        # Renombrar columna reservada SQL
-        df.rename(columns={'default': 'default_col'}, inplace=True)
-
-        # Crear conexión
-        engine = create_engine(DATABASE_URL)
-
-        logging.info("Conexión a Neon establecida")
+        logging.info(
+            "DATABASE_URL encontrada"
+        )
 
         # ============================================
-        # CREAR TABLAS
+        # LEER CSV
         # ============================================
 
-        with engine.connect() as connection:
+        approved_df = pd.read_csv(
+            APPROVED_PATH
+        )
 
-            connection.execute(text(CREATE_CLIENTES_TABLE))
-            connection.execute(text(CREATE_CONTACTOS_TABLE))
-            connection.execute(text(CREATE_CAMPANAS_TABLE))
-            connection.execute(text(CREATE_SUSCRIPCIONES_TABLE))
+        rejected_df = pd.read_csv(
+            REJECTED_PATH
+        )
 
-            connection.commit()
+        logging.info(
+            f"Clientes aprobados: "
+            f"{approved_df.shape[0]}"
+        )
 
-        logging.info("Tablas creadas correctamente")
+        logging.info(
+            f"Clientes rechazados: "
+            f"{rejected_df.shape[0]}"
+        )
 
         # ============================================
-        # INSERTAR CLIENTES
+        # ENGINE
         # ============================================
 
-        clientes_df = df[[
-            'age',
-            'job',
-            'marital',
-            'education',
-            'default_col',
-            'balance',
-            'housing',
-            'loan'
-        ]]
+        engine = create_engine(
+            DATABASE_URL
+        )
 
-        clientes_df.to_sql(
-            name='clientes',
+        logging.info(
+            "Conexión PostgreSQL creada"
+        )
+
+        # ============================================
+        # RENOMBRAR DEFAULT
+        # ============================================
+
+        approved_df.rename(
+
+            columns={
+                'default': 'default_credit'
+            },
+
+            inplace=True
+
+        )
+
+        rejected_df.rename(
+
+            columns={
+                'default': 'default_credit'
+            },
+
+            inplace=True
+
+        )
+
+        # ============================================
+        # TABLA APROBADOS
+        # ============================================
+
+        approved_df.to_sql(
+
+            name='clientes_aprobados',
+
             con=engine,
-            if_exists='append',
+
+            if_exists='replace',
+
             index=False
+
         )
 
-        logging.info("Datos insertados en tabla clientes")
-
-        # ============================================
-        # OBTENER IDS GENERADOS
-        # ============================================
-
-        clientes_ids = pd.read_sql(
-            "SELECT cliente_id FROM clientes ORDER BY cliente_id",
-            engine
+        logging.info(
+            "Tabla clientes_aprobados creada"
         )
 
-        # Agregar ids al dataframe original
-        df['cliente_id'] = clientes_ids['cliente_id']
-
         # ============================================
-        # INSERTAR CONTACTOS
+        # TABLA RECHAZADOS
         # ============================================
 
-        contactos_df = df[[
-            'cliente_id',
-            'contact',
-            'day',
-            'month',
-            'duration',
-            'campaign'
-        ]]
+        rejected_df.to_sql(
 
-        contactos_df.to_sql(
-            name='contactos',
+            name='clientes_rechazados',
+
             con=engine,
-            if_exists='append',
+
+            if_exists='replace',
+
             index=False
+
         )
 
-        logging.info("Datos insertados en tabla contactos")
-
-        # ============================================
-        # INSERTAR CAMPAÑAS PREVIAS
-        # ============================================
-
-        campanas_df = df[[
-            'cliente_id',
-            'pdays',
-            'previous',
-            'poutcome'
-        ]]
-
-        campanas_df.to_sql(
-            name='campanas_previas',
-            con=engine,
-            if_exists='append',
-            index=False
+        logging.info(
+            "Tabla clientes_rechazados creada"
         )
 
-        logging.info("Datos insertados en campanas_previas")
-
         # ============================================
-        # INSERTAR SUSCRIPCIONES
+        # MÉTRICAS
         # ============================================
 
-        suscripciones_df = df[[
-            'cliente_id',
-            'deposit'
-        ]]
+        total_clientes = (
 
-        suscripciones_df.to_sql(
-            name='suscripciones',
-            con=engine,
-            if_exists='append',
-            index=False
+            approved_df.shape[0]
+
+            +
+
+            rejected_df.shape[0]
+
         )
 
-        logging.info("Datos insertados en suscripciones")
+        tasa_aprobacion = round(
+
+            (
+                approved_df.shape[0]
+                /
+                total_clientes
+            ) * 100,
+
+            2
+
+        )
+
+        tasa_rechazo = round(
+
+            (
+                rejected_df.shape[0]
+                /
+                total_clientes
+            ) * 100,
+
+            2
+
+        )
+
+        logging.info(
+            f"Tasa aprobación: "
+            f"{tasa_aprobacion}%"
+        )
+
+        logging.info(
+            f"Tasa rechazo: "
+            f"{tasa_rechazo}%"
+        )
 
         # ============================================
         # FINALIZAR
         # ============================================
 
-        print("===================================")
-        print("CARGA COMPLETADA EXITOSAMENTE")
-        print("===================================")
+        logging.info(
+            "Carga completada correctamente"
+        )
 
-        print("TABLAS CREADAS:")
-        print("- clientes")
-        print("- contactos")
-        print("- campanas_previas")
-        print("- suscripciones")
+        logging.info(
+            "==================================="
+        )
 
-        print(f"Registros cargados: {df.shape[0]}")
+        logging.info(
+            "FIN LOAD"
+        )
 
-        logging.info("Proceso finalizado correctamente")
+        logging.info(
+            "==================================="
+        )
+
+        print(
+            "==================================="
+        )
+
+        print(
+            "CARGA COMPLETADA"
+        )
+
+        print(
+            "==================================="
+        )
+
+        print(
+            f"Clientes aprobados: "
+            f"{approved_df.shape[0]}"
+        )
+
+        print(
+            f"Clientes rechazados: "
+            f"{rejected_df.shape[0]}"
+        )
+
+        print(
+            f"Tasa aprobación: "
+            f"{tasa_aprobacion}%"
+        )
+
+        print(
+            f"Tasa rechazo: "
+            f"{tasa_rechazo}%"
+        )
+
+        print(
+            "Tablas creadas:"
+        )
+
+        print(
+            "- clientes_aprobados"
+        )
+
+        print(
+            "- clientes_rechazados"
+        )
 
     except Exception as e:
 
-        logging.error("ERROR EN CARGA")
-        logging.error(str(e))
+        logging.error(
+            f"Error carga: {e}"
+        )
 
-        print("ERROR EN EL PROCESO")
-        print(str(e))
+        print(
+            f"ERROR: {e}"
+        )
+
+        raise
 
 # ============================================
 # EJECUCIÓN
