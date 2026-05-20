@@ -32,7 +32,7 @@ logging.basicConfig(
 # ============================================
 
 # DATASET ORIGINAL
-SOURCE_PATH = "data/raw/02_bank.csv"
+SOURCE_PATH = "data/source/02_bank.csv"
 
 # DATASET RAW
 OUTPUT_PATH = "data/raw/02_bank.csv"
