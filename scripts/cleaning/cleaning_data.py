@@ -1,5 +1,5 @@
 # ============================================
-# cleaning_data.py
+# scripts/cleaning/cleaning_data.py
 # ============================================
 
 import pandas as pd
@@ -7,15 +7,20 @@ import logging
 import os
 
 # ============================================
-# LOGS
+# CREAR CARPETAS
 # ============================================
 
 os.makedirs("logs", exist_ok=True)
+os.makedirs("data/processed", exist_ok=True)
+
+# ============================================
+# LOGGING
+# ============================================
 
 logging.basicConfig(
-    filename='logs/cleaning.log',
+    filename="logs/cleaning.log",
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
+    format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
 # ============================================
@@ -26,63 +31,7 @@ INPUT_PATH = "data/raw/02_bank.csv"
 OUTPUT_PATH = "data/processed/bank_cleaned.csv"
 
 # ============================================
-# CATÁLOGOS
-# ============================================
-
-VALID_JOBS = [
-    'admin.',
-    'technician',
-    'services',
-    'management',
-    'retired',
-    'blue-collar',
-    'unemployed',
-    'entrepreneur',
-    'housemaid',
-    'student',
-    'self-employed',
-    'unknown'
-]
-
-VALID_MARITAL = [
-    'married',
-    'single',
-    'divorced'
-]
-
-VALID_EDUCATION = [
-    'primary',
-    'secondary',
-    'tertiary',
-    'unknown'
-]
-
-VALID_CONTACT = [
-    'cellular',
-    'telephone',
-    'unknown'
-]
-
-VALID_POUTCOME = [
-    'success',
-    'failure',
-    'other',
-    'unknown'
-]
-
-VALID_BINARY = [
-    'yes',
-    'no'
-]
-
-VALID_MONTHS = [
-    'jan', 'feb', 'mar', 'apr',
-    'may', 'jun', 'jul', 'aug',
-    'sep', 'oct', 'nov', 'dec'
-]
-
-# ============================================
-# CLEANING
+# LIMPIEZA
 # ============================================
 
 def clean_data():
@@ -91,244 +40,152 @@ def clean_data():
 
         print("Iniciando limpieza...")
 
-        logging.info(
-            "========== INICIO LIMPIEZA =========="
-        )
-
-        # ============================================
-        # CARGAR CSV
-        # ============================================
+        logging.info("===================================")
+        logging.info("INICIO LIMPIEZA")
+        logging.info("===================================")
 
         df = pd.read_csv(INPUT_PATH)
 
-        logging.info(
-            f"Dataset original: {df.shape}"
+        initial_rows = len(df)
+
+        # ============================================
+        # LIMPIAR COLUMNAS
+        # ============================================
+
+        df.columns = (
+            df.columns
+            .str.strip()
+            .str.lower()
         )
 
         # ============================================
-        # DUPLICADOS
+        # LIMPIAR TEXTO
         # ============================================
 
-        duplicates = df.duplicated().sum()
+        object_columns = df.select_dtypes(
+        include=["object", "string"]
+        ).columns
 
-        df.drop_duplicates(inplace=True)
-
-        logging.info(
-            f"Duplicados eliminados: {duplicates}"
-        )
-
-        # ============================================
-        # LIMPIEZA TEXTO
-        # ============================================
-
-        text_columns = [
-            'job',
-            'marital',
-            'education',
-            'default',
-            'housing',
-            'loan',
-            'contact',
-            'month',
-            'poutcome',
-            'deposit'
-        ]
-
-        for col in text_columns:
+        for col in object_columns:
 
             df[col] = (
+
                 df[col]
                 .astype(str)
                 .str.strip()
                 .str.lower()
+
             )
 
         # ============================================
-        # CORRECCIÓN TYPO
+        # ELIMINAR DUPLICADOS
         # ============================================
 
-        df['job'] = df['job'].replace({
-            'admin': 'admin.',
-            'unknow': 'unknown'
-        })
+        duplicates = df.duplicated().sum()
 
-        logging.info(
-            "Homogeneización aplicada"
+        df = df.drop_duplicates()
+
+        # ============================================
+        # ELIMINAR NULOS CRÍTICOS
+        # ============================================
+
+        critical_columns = [
+            "age",
+            "job",
+            "balance",
+            "deposit"
+        ]
+
+        nulls_before = df.isnull().sum().sum()
+
+        df = df.dropna(
+            subset=critical_columns
         )
 
         # ============================================
-        # NUMÉRICOS
+        # VALIDAR EDADES
+        # ============================================
+
+        df = df[
+            df["age"] >= 18
+        ]
+
+        # ============================================
+        # CONVERTIR NUMÉRICOS
         # ============================================
 
         numeric_columns = [
-            'age',
-            'balance',
-            'day',
-            'duration',
-            'campaign',
-            'pdays',
-            'previous'
+            "age",
+            "balance",
+            "day",
+            "duration",
+            "campaign",
+            "pdays",
+            "previous"
         ]
 
         for col in numeric_columns:
 
             df[col] = pd.to_numeric(
                 df[col],
-                errors='coerce'
+                errors="coerce"
             )
 
-        logging.info(
-            "Conversión numérica aplicada"
+        # ============================================
+        # VALIDAR JOBS
+        # ============================================
+
+        valid_jobs = [
+
+            "admin.",
+            "technician",
+            "services",
+            "management",
+            "retired",
+            "blue-collar",
+            "unemployed",
+            "entrepreneur",
+            "housemaid",
+            "self-employed",
+            "student",
+            "unknown"
+
+        ]
+
+        df.loc[
+            ~df["job"].isin(valid_jobs),
+            "job"
+        ] = "unknown"
+
+        # ============================================
+        # KPI LIMPIEZA
+        # ============================================
+
+        final_rows = len(df)
+
+        removed_rows = (
+            initial_rows - final_rows
         )
 
-        # ============================================
-        # NULOS
-        # ============================================
-
-        nulls = df.isnull().sum().sum()
-
-        df.dropna(inplace=True)
-
         logging.info(
-            f"Nulos eliminados: {nulls}"
+            f"Duplicados eliminados: {duplicates}"
         )
 
-        # ============================================
-        # VALIDACIONES CATEGÓRICAS
-        # ============================================
-
-        before = df.shape[0]
-
-        df = df[
-            df['job'].isin(VALID_JOBS)
-        ]
-
         logging.info(
-            f"Registros eliminados por job inválido: "
-            f"{before - df.shape[0]}"
+            f"Nulos detectados: {nulls_before}"
         )
 
-        before = df.shape[0]
-
-        df = df[
-            df['marital'].isin(VALID_MARITAL)
-        ]
-
         logging.info(
-            f"Registros eliminados por marital inválido: "
-            f"{before - df.shape[0]}"
+            f"Filas eliminadas: {removed_rows}"
         )
 
-        before = df.shape[0]
-
-        df = df[
-            df['education'].isin(
-                VALID_EDUCATION
-            )
-        ]
-
         logging.info(
-            f"Registros eliminados por education inválido: "
-            f"{before - df.shape[0]}"
-        )
-
-        df = df[
-            df['contact'].isin(
-                VALID_CONTACT
-            )
-        ]
-
-        df = df[
-            df['poutcome'].isin(
-                VALID_POUTCOME
-            )
-        ]
-
-        df = df[
-            df['month'].isin(
-                VALID_MONTHS
-            )
-        ]
-
-        # ============================================
-        # VALIDACIONES BINARIAS
-        # ============================================
-
-        df = df[
-            df['default'].isin(
-                VALID_BINARY
-            )
-        ]
-
-        df = df[
-            df['housing'].isin(
-                VALID_BINARY
-            )
-        ]
-
-        df = df[
-            df['loan'].isin(
-                VALID_BINARY
-            )
-        ]
-
-        df = df[
-            df['deposit'].isin(
-                VALID_BINARY
-            )
-        ]
-
-        logging.info(
-            "Validaciones categóricas aplicadas"
-        )
-
-        # ============================================
-        # VALIDACIONES NUMÉRICAS
-        # ============================================
-
-        before_numeric = df.shape[0]
-
-        df = df[
-            (df['age'] >= 18)
-            &
-            (df['age'] <= 100)
-        ]
-
-        df = df[
-            (df['day'] >= 1)
-            &
-            (df['day'] <= 31)
-        ]
-
-        df = df[
-            df['duration'] >= 0
-        ]
-
-        df = df[
-            df['campaign'] >= 0
-        ]
-
-        df = df[
-            df['pdays'] >= -1
-        ]
-
-        df = df[
-            df['previous'] >= 0
-        ]
-
-        logging.info(
-            f"Registros eliminados por reglas numéricas: "
-            f"{before_numeric - df.shape[0]}"
+            f"Filas finales: {final_rows}"
         )
 
         # ============================================
         # EXPORTAR
         # ============================================
-
-        os.makedirs(
-            "data/processed",
-            exist_ok=True
-        )
 
         df.to_csv(
             OUTPUT_PATH,
@@ -336,25 +193,24 @@ def clean_data():
         )
 
         logging.info(
-            f"Dataset limpio exportado: {df.shape}"
-        )
-
-        logging.info(
-            "========== FIN LIMPIEZA =========="
+            "Limpieza completada"
         )
 
         print("Limpieza completada")
 
-        return df
-
     except Exception as e:
 
         logging.error(
-            f"Error limpieza: {e}"
+            f"ERROR LIMPIEZA: {e}"
         )
+
+        print(f"ERROR: {e}")
 
         raise
 
+# ============================================
+# EJECUCIÓN
+# ============================================
 
 if __name__ == "__main__":
     clean_data()

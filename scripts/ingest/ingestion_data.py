@@ -1,5 +1,5 @@
 # ============================================
-# ingestion_data.py
+# scripts/ingest/ingestion_data.py
 # ============================================
 
 import pandas as pd
@@ -10,7 +10,10 @@ import os
 # CREAR CARPETAS
 # ============================================
 
-os.makedirs("logs", exist_ok=True)
+os.makedirs(
+    "logs",
+    exist_ok=True
+)
 
 os.makedirs(
     "data/raw",
@@ -18,13 +21,13 @@ os.makedirs(
 )
 
 # ============================================
-# CONFIG LOGS
+# LOGGING
 # ============================================
 
 logging.basicConfig(
-    filename='logs/ingestion.log',
+    filename="logs/ingestion.log",
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
+    format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
 # ============================================
@@ -32,10 +35,40 @@ logging.basicConfig(
 # ============================================
 
 # DATASET ORIGINAL
-SOURCE_PATH = "data/source/02_bank.csv"
+SOURCE_PATH = (
+    "data/source/02_bank.csv"
+)
 
 # DATASET RAW
-OUTPUT_PATH = "data/raw/02_bank.csv"
+OUTPUT_PATH = (
+    "data/raw/02_bank.csv"
+)
+
+# ============================================
+# COLUMNAS OBLIGATORIAS
+# ============================================
+
+REQUIRED_COLUMNS = [
+
+    "age",
+    "job",
+    "marital",
+    "education",
+    "default",
+    "balance",
+    "housing",
+    "loan",
+    "contact",
+    "day",
+    "month",
+    "duration",
+    "campaign",
+    "pdays",
+    "previous",
+    "poutcome",
+    "deposit"
+
+]
 
 # ============================================
 # INGESTA
@@ -62,10 +95,12 @@ def ingest_data():
         )
 
         # ============================================
-        # VALIDAR EXISTENCIA ARCHIVO
+        # VALIDAR ARCHIVO
         # ============================================
 
-        if not os.path.exists(SOURCE_PATH):
+        if not os.path.exists(
+            SOURCE_PATH
+        ):
 
             raise FileNotFoundError(
 
@@ -79,31 +114,164 @@ def ingest_data():
         )
 
         # ============================================
-        # LEER CSV
+        # LEER DATASET
         # ============================================
 
         df = pd.read_csv(
             SOURCE_PATH
         )
 
+        # ============================================
+        # VALIDAR DATASET VACÍO
+        # ============================================
+
+        if df.empty:
+
+            raise ValueError(
+                "El dataset está vacío"
+            )
+
         logging.info(
-            f"Dataset cargado correctamente"
+            "Dataset leído correctamente"
+        )
+
+        # ============================================
+        # LIMPIAR NOMBRES COLUMNAS
+        # ============================================
+
+        df.columns = (
+
+            df.columns
+            .str.strip()
+            .str.lower()
+
+        )
+
+        # ============================================
+        # VALIDAR COLUMNAS
+        # ============================================
+
+        missing_columns = [
+
+            col
+
+            for col in REQUIRED_COLUMNS
+
+            if col not in df.columns
+
+        ]
+
+        if missing_columns:
+
+            raise ValueError(
+
+                f"Faltan columnas "
+                f"obligatorias: "
+                f"{missing_columns}"
+
+            )
+
+        logging.info(
+            "Columnas validadas correctamente"
+        )
+
+        # ============================================
+        # KPIs INICIALES
+        # ============================================
+
+        total_clients = len(df)
+
+        deposit_yes = len(
+
+            df[
+                df["deposit"] == "yes"
+            ]
+
+        )
+
+        deposit_no = len(
+
+            df[
+                df["deposit"] == "no"
+            ]
+
+        )
+
+        conversion_rate = round(
+
+            (
+                deposit_yes / total_clients
+            ) * 100,
+
+            2
+
+        )
+
+        avg_balance = round(
+
+            df["balance"].mean(),
+
+            2
+
+        )
+
+        avg_age = round(
+
+            df["age"].mean(),
+
+            2
+
+        )
+
+        # ============================================
+        # LOG KPIs
+        # ============================================
+
+        logging.info(
+            f"Clientes totales: "
+            f"{total_clients}"
         )
 
         logging.info(
-            f"Filas detectadas: "
-            f"{df.shape[0]}"
+            f"Clientes depósito YES: "
+            f"{deposit_yes}"
         )
 
         logging.info(
-            f"Columnas detectadas: "
-            f"{df.shape[1]}"
+            f"Clientes depósito NO: "
+            f"{deposit_no}"
         )
 
         logging.info(
-            f"Columnas: "
-            f"{list(df.columns)}"
+            f"Tasa conversión inicial: "
+            f"{conversion_rate}%"
         )
+
+        logging.info(
+            f"Balance promedio: "
+            f"{avg_balance}"
+        )
+
+        logging.info(
+            f"Edad promedio: "
+            f"{avg_age}"
+        )
+
+        # ============================================
+        # ALERTAS
+        # ============================================
+
+        if conversion_rate < 10:
+
+            logging.warning(
+                "ALERTA: Conversión baja"
+            )
+
+        if avg_balance < 0:
+
+            logging.warning(
+                "ALERTA: Balance promedio negativo"
+            )
 
         # ============================================
         # EXPORTAR RAW
@@ -115,7 +283,7 @@ def ingest_data():
         )
 
         logging.info(
-            f"Archivo raw generado: "
+            f"Archivo RAW generado: "
             f"{OUTPUT_PATH}"
         )
 
@@ -135,18 +303,32 @@ def ingest_data():
             "==================================="
         )
 
+        # ============================================
+        # PRINTS
+        # ============================================
+
         print(
             "Ingesta completada correctamente"
         )
 
         print(
-            f"Filas cargadas: "
-            f"{df.shape[0]}"
+            f"Clientes totales: "
+            f"{total_clients}"
         )
 
         print(
-            f"Columnas cargadas: "
-            f"{df.shape[1]}"
+            f"Tasa conversión inicial: "
+            f"{conversion_rate}%"
+        )
+
+        print(
+            f"Balance promedio: "
+            f"{avg_balance}"
+        )
+
+        print(
+            f"Edad promedio: "
+            f"{avg_age}"
         )
 
         return df
@@ -154,7 +336,7 @@ def ingest_data():
     except Exception as e:
 
         logging.error(
-            f"Error en ingesta: {e}"
+            f"ERROR INGESTA: {e}"
         )
 
         print(
@@ -168,4 +350,5 @@ def ingest_data():
 # ============================================
 
 if __name__ == "__main__":
+
     ingest_data()

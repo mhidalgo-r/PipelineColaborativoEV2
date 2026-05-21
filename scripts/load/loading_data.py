@@ -1,22 +1,24 @@
 # ============================================
-# loading_data.py
+# scripts/load/loading_data.py
 # ============================================
 
 import pandas as pd
 import logging
 import os
 
-from sqlalchemy import create_engine
 from dotenv import load_dotenv
 
+from sqlalchemy import create_engine
+from sqlalchemy import text
+
 # ============================================
-# VARIABLES ENTORNO
+# CARGAR ENV
 # ============================================
 
 load_dotenv()
 
 # ============================================
-# CREAR LOGS
+# CREAR CARPETAS
 # ============================================
 
 os.makedirs(
@@ -29,9 +31,9 @@ os.makedirs(
 # ============================================
 
 logging.basicConfig(
-    filename='logs/loading.log',
+    filename="logs/loading.log",
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
+    format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
 # ============================================
@@ -40,6 +42,10 @@ logging.basicConfig(
 
 APPROVED_PATH = (
     "data/validated/bank_validated.csv"
+)
+
+PREMIUM_PATH = (
+    "data/validated/bank_premium.csv"
 )
 
 REJECTED_PATH = (
@@ -66,20 +72,8 @@ def load_data():
             "Iniciando carga..."
         )
 
-        logging.info(
-            "==================================="
-        )
-
-        logging.info(
-            "INICIO LOAD"
-        )
-
-        logging.info(
-            "==================================="
-        )
-
         # ============================================
-        # VALIDAR DB
+        # VALIDAR DATABASE URL
         # ============================================
 
         if not DATABASE_URL:
@@ -87,10 +81,6 @@ def load_data():
             raise ValueError(
                 "DATABASE_URL no encontrada"
             )
-
-        logging.info(
-            "DATABASE_URL encontrada"
-        )
 
         # ============================================
         # LEER CSV
@@ -100,163 +90,229 @@ def load_data():
             APPROVED_PATH
         )
 
+        premium_df = pd.read_csv(
+            PREMIUM_PATH
+        )
+
         rejected_df = pd.read_csv(
             REJECTED_PATH
         )
 
-        logging.info(
-            f"Clientes aprobados: "
-            f"{approved_df.shape[0]}"
-        )
-
-        logging.info(
-            f"Clientes rechazados: "
-            f"{rejected_df.shape[0]}"
-        )
-
         # ============================================
-        # ENGINE
+        # CONEXIÓN
         # ============================================
 
         engine = create_engine(
             DATABASE_URL
         )
 
+        # ============================================
+        # ELIMINAR TABLAS
+        # ============================================
+
+        with engine.connect() as conn:
+
+            conn.execute(text(
+                """
+                DROP TABLE IF EXISTS
+                clientes_aprobados;
+                """
+            ))
+
+            conn.execute(text(
+                """
+                DROP TABLE IF EXISTS
+                clientes_premium;
+                """
+            ))
+
+            conn.execute(text(
+                """
+                DROP TABLE IF EXISTS
+                clientes_rechazados;
+                """
+            ))
+
+            conn.commit()
+
         logging.info(
-            "Conexión PostgreSQL creada"
+            "Tablas eliminadas correctamente"
         )
 
         # ============================================
-        # RENOMBRAR DEFAULT
-        # ============================================
-
-        approved_df.rename(
-
-            columns={
-                'default': 'default_credit'
-            },
-
-            inplace=True
-
-        )
-
-        rejected_df.rename(
-
-            columns={
-                'default': 'default_credit'
-            },
-
-            inplace=True
-
-        )
-
-        # ============================================
-        # TABLA APROBADOS
+        # CARGAR TABLAS
         # ============================================
 
         approved_df.to_sql(
 
-            name='clientes_aprobados',
+            "clientes_aprobados",
 
-            con=engine,
+            engine,
 
-            if_exists='replace',
+            if_exists="replace",
 
             index=False
 
         )
 
-        logging.info(
-            "Tabla clientes_aprobados creada"
-        )
+        premium_df.to_sql(
 
-        # ============================================
-        # TABLA RECHAZADOS
-        # ============================================
+            "clientes_premium",
+
+            engine,
+
+            if_exists="replace",
+
+            index=False
+
+        )
 
         rejected_df.to_sql(
 
-            name='clientes_rechazados',
+            "clientes_rechazados",
 
-            con=engine,
+            engine,
 
-            if_exists='replace',
+            if_exists="replace",
 
             index=False
 
         )
 
+        # ============================================
+        # KPIs
+        # ============================================
+
+        approved_count = len(
+            approved_df
+        )
+
+        premium_count = len(
+            premium_df
+        )
+
+        rejected_count = len(
+            rejected_df
+        )
+
+        total_clients = (
+            approved_count +
+            rejected_count
+        )
+
+        approval_rate = round(
+
+            (
+                approved_count /
+                total_clients
+            ) * 100,
+
+            2
+
+        )
+
+        rejection_rate = round(
+
+            (
+                rejected_count /
+                total_clients
+            ) * 100,
+
+            2
+
+        )
+
+        premium_rate = round(
+
+            (
+                premium_count /
+                approved_count
+            ) * 100,
+
+            2
+
+        )
+
+        avg_probability = round(
+
+            approved_df[
+                "subscription_probability"
+            ].mean(),
+
+            2
+
+        )
+
+        # ============================================
+        # LOGGING
+        # ============================================
+
         logging.info(
-            "Tabla clientes_rechazados creada"
+            "==================================="
         )
 
-        # ============================================
-        # MÉTRICAS
-        # ============================================
-
-        total_clientes = (
-
-            approved_df.shape[0]
-
-            +
-
-            rejected_df.shape[0]
-
+        logging.info(
+            "CARGA COMPLETADA"
         )
 
-        tasa_aprobacion = round(
-
-            (
-                approved_df.shape[0]
-                /
-                total_clientes
-            ) * 100,
-
-            2
-
+        logging.info(
+            "==================================="
         )
 
-        tasa_rechazo = round(
+        logging.info(
+            f"Clientes aprobados: "
+            f"{approved_count}"
+        )
 
-            (
-                rejected_df.shape[0]
-                /
-                total_clientes
-            ) * 100,
+        logging.info(
+            f"Clientes premium: "
+            f"{premium_count}"
+        )
 
-            2
-
+        logging.info(
+            f"Clientes rechazados: "
+            f"{rejected_count}"
         )
 
         logging.info(
             f"Tasa aprobación: "
-            f"{tasa_aprobacion}%"
+            f"{approval_rate}%"
+        )
+
+        logging.info(
+            f"Tasa premium: "
+            f"{premium_rate}%"
         )
 
         logging.info(
             f"Tasa rechazo: "
-            f"{tasa_rechazo}%"
+            f"{rejection_rate}%"
+        )
+
+        logging.info(
+            f"Probabilidad promedio: "
+            f"{avg_probability}%"
         )
 
         # ============================================
-        # FINALIZAR
+        # ALERTAS
         # ============================================
 
-        logging.info(
-            "Carga completada correctamente"
-        )
+        if rejection_rate > 20:
 
-        logging.info(
-            "==================================="
-        )
+            logging.warning(
+                "ALERTA: Alta tasa rechazo"
+            )
 
-        logging.info(
-            "FIN LOAD"
-        )
+        if premium_rate < 20:
 
-        logging.info(
-            "==================================="
-        )
+            logging.warning(
+                "ALERTA: Baja tasa premium"
+            )
+
+        # ============================================
+        # PRINTS
+        # ============================================
 
         print(
             "==================================="
@@ -272,22 +328,37 @@ def load_data():
 
         print(
             f"Clientes aprobados: "
-            f"{approved_df.shape[0]}"
+            f"{approved_count}"
+        )
+
+        print(
+            f"Clientes premium: "
+            f"{premium_count}"
         )
 
         print(
             f"Clientes rechazados: "
-            f"{rejected_df.shape[0]}"
+            f"{rejected_count}"
         )
 
         print(
             f"Tasa aprobación: "
-            f"{tasa_aprobacion}%"
+            f"{approval_rate}%"
+        )
+
+        print(
+            f"Tasa premium: "
+            f"{premium_rate}%"
         )
 
         print(
             f"Tasa rechazo: "
-            f"{tasa_rechazo}%"
+            f"{rejection_rate}%"
+        )
+
+        print(
+            f"Probabilidad promedio: "
+            f"{avg_probability}%"
         )
 
         print(
@@ -299,13 +370,17 @@ def load_data():
         )
 
         print(
+            "- clientes_premium"
+        )
+
+        print(
             "- clientes_rechazados"
         )
 
     except Exception as e:
 
         logging.error(
-            f"Error carga: {e}"
+            f"ERROR LOAD: {e}"
         )
 
         print(
@@ -319,4 +394,5 @@ def load_data():
 # ============================================
 
 if __name__ == "__main__":
+
     load_data()
