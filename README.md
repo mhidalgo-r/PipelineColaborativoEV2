@@ -523,16 +523,175 @@ El pipeline se ejecuta automáticamente:
 
 # Docker
 
-El proyecto puede ejecutarse mediante Docker.
+# Ejecución con Docker
 
-Ventajas:
-
-* Portabilidad.
-* Reproducibilidad.
-* Consistencia de entorno.
-* Fácil despliegue.
+El proyecto puede ejecutarse completamente dentro de un contenedor Docker, permitiendo replicar el entorno de ejecución de forma portable y consistente.
 
 ---
+
+## Requisitos Previos
+
+Tener instalado:
+
+* Docker Desktop
+* Docker Compose
+
+Verificar instalación:
+
+```bash
+docker --version
+docker compose version
+```
+
+---
+
+# Crear archivo .env
+
+Antes de ejecutar Docker, se debe crear un archivo:
+
+```text
+.env
+```
+
+Con el siguiente contenido:
+
+```env
+DATABASE_URL=postgresql://usuario:password@host/database
+```
+
+Este archivo no se sube a GitHub debido a seguridad.
+
+---
+
+# Construir y Ejecutar el Pipeline
+
+Desde la raíz del proyecto ejecutar:
+
+```bash
+docker compose up --build
+```
+
+Este comando:
+
+1. Construye la imagen Docker.
+2. Instala dependencias automáticamente.
+3. Ejecuta el pipeline ETL completo.
+4. Genera logs.
+5. Carga los datos en PostgreSQL.
+
+---
+
+# Flujo Ejecutado Automáticamente
+
+Docker ejecuta:
+
+```bash
+python scripts/ingest/ingestion_data.py &&
+python scripts/cleaning/cleaning_data.py &&
+python scripts/transform/transform_data.py &&
+python scripts/validation/validation_data.py &&
+python scripts/load/loading_data.py
+```
+
+---
+
+# Detener Contenedores
+
+Para detener Docker:
+
+```bash
+docker compose down
+```
+
+---
+
+# Reconstruir Imagen
+
+Si existen cambios en dependencias o scripts:
+
+```bash
+docker compose up --build
+```
+
+---
+
+# Ver Contenedores Activos
+
+```bash
+docker ps
+```
+
+---
+
+# Ver Logs del Contenedor
+
+```bash
+docker logs bank_marketing_pipeline
+```
+
+---
+
+# Eliminar Contenedores e Imágenes
+
+Eliminar contenedores:
+
+```bash
+docker compose down
+```
+
+Eliminar imágenes:
+
+```bash
+docker rmi pipelinecolaborativoev2-bank-pipeline
+```
+
+---
+
+# Ventajas del Uso de Docker
+
+* Portabilidad del entorno.
+* Reproducibilidad del pipeline.
+* Ejecución consistente.
+* Fácil despliegue cloud.
+* Aislamiento de dependencias.
+* Compatibilidad con CI/CD.
+
+---
+
+# Resultado Esperado
+
+Al finalizar correctamente se generan:
+
+## CSV
+
+```text
+data/validated/bank_validated.csv
+data/validated/bank_premium.csv
+data/reject/bank_rejected.csv
+```
+
+---
+
+## Tablas PostgreSQL
+
+```text
+clientes_aprobados
+clientes_premium
+clientes_rechazados
+```
+
+---
+
+## Logs
+
+```text
+logs/ingestion.log
+logs/cleaning.log
+logs/transformation.log
+logs/validation.log
+logs/loading.log
+```
+
 
 # Calidad de Datos
 
