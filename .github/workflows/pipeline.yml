@@ -2,7 +2,7 @@ name: Bank Marketing ETL Pipeline
 on:
   push:
     branches:
-      - feature/pipeline-final
+      - feature/pipeline-reportes
   workflow_dispatch:
 env:
   PYTHONPATH: ${{ github.workspace }}
