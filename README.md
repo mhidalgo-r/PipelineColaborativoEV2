@@ -127,6 +127,8 @@ PipelineColaborativoEV2/
 │   ├── processed/
 │   ├── validated/
 │   └── reject/
+│   ├── source/
+│   │   └── 02_bank.csv
 │
 ├── logs/
 │
@@ -136,6 +138,10 @@ PipelineColaborativoEV2/
 │   ├── transform/
 │   ├── validation/
 │   └── load/
+│
+├── utils/
+│   ├── __init__.py/
+│   ├── pipeline_logger.py/
 │
 ├── requirements.txt
 ├── Dockerfile
