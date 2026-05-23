@@ -5,6 +5,13 @@
 import pandas as pd
 import logging
 import os
+import time
+
+# ============================================
+# PIPELINE LOGGER
+# ============================================
+
+from utils.pipeline_logger import *
 
 # ============================================
 # CARPETAS
@@ -13,7 +20,7 @@ import os
 os.makedirs("logs", exist_ok=True)
 
 # ============================================
-# LOGGING
+# LOGGING INDIVIDUAL
 # ============================================
 
 logging.basicConfig(
@@ -21,6 +28,10 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
+
+# ============================================
+# PATHS
+# ============================================
 
 INPUT_PATH = "data/processed/bank_cleaned.csv"
 
@@ -32,11 +43,48 @@ OUTPUT_PATH = "data/processed/bank_transformed.csv"
 
 def transform_data():
 
+    start_time = time.time()
+
     try:
 
         print("Iniciando transformación...")
 
+        # ============================================
+        # LOG INDIVIDUAL
+        # ============================================
+
+        logging.info("===================================")
+        logging.info("INICIO TRANSFORMACIÓN")
+        logging.info("===================================")
+
+        # ============================================
+        # LOG GLOBAL PIPELINE
+        # ============================================
+
+        log_section(
+            "ETAPA 3 - TRANSFORMACIÓN"
+        )
+
+        log_message(
+            "Inicio proceso transformación"
+        )
+
+        # ============================================
+        # LEER DATASET
+        # ============================================
+
         df = pd.read_csv(INPUT_PATH)
+
+        total_clients = len(df)
+
+        logging.info(
+            f"Clientes recibidos: {total_clients}"
+        )
+
+        log_metric(
+            "Clientes recibidos",
+            total_clients
+        )
 
         # ============================================
         # VARIABLES BINARIAS
@@ -55,6 +103,19 @@ def transform_data():
                 "yes": 1,
                 "no": 0
             })
+
+        logging.info(
+            "Variables binarias transformadas"
+        )
+
+        log_message(
+            "Conversión variables binarias completada"
+        )
+
+        log_list(
+            "Variables binarias",
+            binary_columns
+        )
 
         # ============================================
         # GRUPOS ETARIOS
@@ -75,6 +136,14 @@ def transform_data():
 
         )
 
+        logging.info(
+            "Grupos etarios generados"
+        )
+
+        log_message(
+            "Segmentación etaria completada"
+        )
+
         # ============================================
         # VARIABLES NUEVAS
         # ============================================
@@ -84,10 +153,15 @@ def transform_data():
         risk_levels = []
         approvals = []
         rejection_reasons = []
+        premium_clients = []
 
         # ============================================
         # SCORING
         # ============================================
+
+        log_message(
+            "Inicio motor scoring bancario"
+        )
 
         for _, row in df.iterrows():
 
@@ -363,6 +437,26 @@ def transform_data():
             )
 
             # ============================================
+            # CLIENTE PREMIUM
+            # ============================================
+
+            if (
+                probability >= 85 and
+                warnings <= 1 and
+                row["balance"] >= 5000
+            ):
+
+                premium_clients.append(
+                    "yes"
+                )
+
+            else:
+
+                premium_clients.append(
+                    "no"
+                )
+
+            # ============================================
             # MOTIVO RECHAZO
             # ============================================
 
@@ -392,6 +486,16 @@ def transform_data():
 
         df["rejection_reason"] = rejection_reasons
 
+        df["premium_client"] = premium_clients
+
+        logging.info(
+            "Variables derivadas generadas"
+        )
+
+        log_message(
+            "Variables enriquecidas agregadas"
+        )
+
         # ============================================
         # KPIs
         # ============================================
@@ -408,6 +512,12 @@ def transform_data():
             ]
         )
 
+        premium = len(
+            df[
+                df["premium_client"] == "yes"
+            ]
+        )
+
         total = len(df)
 
         approval_rate = round(
@@ -417,6 +527,11 @@ def transform_data():
 
         rejection_rate = round(
             (rejected / total) * 100,
+            2
+        )
+
+        premium_rate = round(
+            (premium / approved) * 100,
             2
         )
 
@@ -430,6 +545,10 @@ def transform_data():
 
         )
 
+        # ============================================
+        # LOG KPIs INDIVIDUALES
+        # ============================================
+
         logging.info(
             f"Tasa aprobación: {approval_rate}%"
         )
@@ -439,7 +558,50 @@ def transform_data():
         )
 
         logging.info(
+            f"Tasa premium: {premium_rate}%"
+        )
+
+        logging.info(
             f"Probabilidad promedio: {avg_probability}%"
+        )
+
+        # ============================================
+        # LOG KPIs GLOBALES
+        # ============================================
+
+        log_metric(
+            "Clientes aprobados",
+            approved
+        )
+
+        log_metric(
+            "Clientes rechazados",
+            rejected
+        )
+
+        log_metric(
+            "Clientes premium",
+            premium
+        )
+
+        log_metric(
+            "Tasa aprobación",
+            f"{approval_rate}%"
+        )
+
+        log_metric(
+            "Tasa rechazo",
+            f"{rejection_rate}%"
+        )
+
+        log_metric(
+            "Tasa premium",
+            f"{premium_rate}%"
+        )
+
+        log_metric(
+            "Probabilidad promedio",
+            f"{avg_probability}%"
         )
 
         # ============================================
@@ -452,10 +614,18 @@ def transform_data():
                 "ALERTA: Alta tasa rechazo"
             )
 
+            log_message(
+                "ALERTA DETECTADA: Alta tasa rechazo"
+            )
+
         if avg_probability < 40:
 
             logging.warning(
                 "ALERTA: Baja probabilidad promedio"
+            )
+
+            log_message(
+                "ALERTA DETECTADA: Baja probabilidad promedio"
             )
 
         # ============================================
@@ -466,6 +636,40 @@ def transform_data():
             OUTPUT_PATH,
             index=False
         )
+
+        logging.info(
+            f"Archivo exportado: {OUTPUT_PATH}"
+        )
+
+        log_message(
+            "Dataset transformado exportado"
+        )
+
+        log_metric(
+            "Ruta salida",
+            OUTPUT_PATH
+        )
+
+        # ============================================
+        # TIEMPO EJECUCIÓN
+        # ============================================
+
+        log_execution_time(
+            "TRANSFORMACIÓN",
+            start_time
+        )
+
+        # ============================================
+        # FIN LOG INDIVIDUAL
+        # ============================================
+
+        logging.info("===================================")
+        logging.info("FIN TRANSFORMACIÓN")
+        logging.info("===================================")
+
+        # ============================================
+        # PRINTS
+        # ============================================
 
         print("Transformación completada")
 
@@ -478,12 +682,20 @@ def transform_data():
         )
 
         print(
+            f"Clientes premium: {premium}"
+        )
+
+        print(
             f"Probabilidad promedio: {avg_probability}%"
         )
 
     except Exception as e:
 
         logging.error(
+            f"ERROR TRANSFORMACIÓN: {e}"
+        )
+
+        log_error(
             f"ERROR TRANSFORMACIÓN: {e}"
         )
 

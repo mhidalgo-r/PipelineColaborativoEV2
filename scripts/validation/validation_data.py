@@ -5,6 +5,9 @@
 import pandas as pd
 import logging
 import os
+import time
+
+from utils.pipeline_logger import *
 
 # ============================================
 # CREAR CARPETAS
@@ -63,6 +66,8 @@ def validate_data():
 
     try:
 
+        start_time = time.time()
+
         print(
             "Iniciando validación..."
         )
@@ -80,6 +85,18 @@ def validate_data():
         )
 
         # ============================================
+        # PIPELINE REPORT
+        # ============================================
+
+        log_section(
+            "ETAPA 4 - VALIDACIÓN"
+        )
+
+        log_message(
+            "Inicio proceso validación"
+        )
+
+        # ============================================
         # LEER DATASET
         # ============================================
 
@@ -89,6 +106,14 @@ def validate_data():
 
         logging.info(
             "Dataset transformado cargado"
+        )
+
+        log_message(
+            f"Dataset cargado: {INPUT_PATH}"
+        )
+
+        log_message(
+            f"Total registros recibidos: {len(df)}"
         )
 
         # ============================================
@@ -119,6 +144,10 @@ def validate_data():
 
         ]
 
+        log_message(
+            f"Registros válidos: {len(valid_df)}"
+        )
+
         # ============================================
         # RECHAZADOS ESTRUCTURALES
         # ============================================
@@ -126,6 +155,11 @@ def validate_data():
         rejected_structural = df[
             ~df.index.isin(valid_df.index)
         ]
+
+        log_message(
+            f"Rechazos estructurales: "
+            f"{len(rejected_structural)}"
+        )
 
         # ============================================
         # CLIENTES APROBADOS
@@ -159,19 +193,32 @@ def validate_data():
 
         # ============================================
         # CLIENTES PREMIUM
+        # SOLO CLIENTES CON premium_client == yes
         # ============================================
 
         premium_clients = approved_clients[
 
             approved_clients[
-                "subscription_probability"
-            ] >= 80
+                "premium_client"
+            ] == "yes"
 
         ]
 
         # ============================================
         # ELIMINAR DUPLICADOS
         # ============================================
+
+        approved_before = len(
+            approved_clients
+        )
+
+        rejected_before = len(
+            rejected_clients
+        )
+
+        premium_before = len(
+            premium_clients
+        )
 
         approved_clients = (
             approved_clients
@@ -186,6 +233,21 @@ def validate_data():
         premium_clients = (
             premium_clients
             .drop_duplicates()
+        )
+
+        log_message(
+            f"Duplicados eliminados aprobados: "
+            f"{approved_before - len(approved_clients)}"
+        )
+
+        log_message(
+            f"Duplicados eliminados rechazados: "
+            f"{rejected_before - len(rejected_clients)}"
+        )
+
+        log_message(
+            f"Duplicados eliminados premium: "
+            f"{premium_before - len(premium_clients)}"
         )
 
         # ============================================
@@ -252,43 +314,58 @@ def validate_data():
 
         )
 
+        avg_premium_probability = round(
+
+            premium_clients[
+                "subscription_probability"
+            ].mean(),
+
+            2
+
+        )
+
         # ============================================
         # LOG KPIs
         # ============================================
 
-        logging.info(
+        log_message(
             f"Clientes aprobados: "
             f"{approved_count}"
         )
 
-        logging.info(
+        log_message(
             f"Clientes rechazados: "
             f"{rejected_count}"
         )
 
-        logging.info(
+        log_message(
             f"Clientes premium: "
             f"{premium_count}"
         )
 
-        logging.info(
+        log_message(
             f"Tasa aprobación: "
             f"{approval_rate}%"
         )
 
-        logging.info(
+        log_message(
             f"Tasa rechazo: "
             f"{rejection_rate}%"
         )
 
-        logging.info(
+        log_message(
             f"Tasa premium: "
             f"{premium_rate}%"
         )
 
-        logging.info(
+        log_message(
             f"Probabilidad promedio: "
             f"{avg_probability}%"
+        )
+
+        log_message(
+            f"Probabilidad promedio premium: "
+            f"{avg_premium_probability}%"
         )
 
         # ============================================
@@ -301,9 +378,17 @@ def validate_data():
                 "ALERTA: Alta tasa rechazo"
             )
 
+            log_message(
+                "ALERTA: Alta tasa rechazo"
+            )
+
         if premium_rate < 20:
 
             logging.warning(
+                "ALERTA: Baja tasa premium"
+            )
+
+            log_message(
                 "ALERTA: Baja tasa premium"
             )
 
@@ -330,19 +415,40 @@ def validate_data():
             "CSV exportados correctamente"
         )
 
+        log_message(
+            f"Archivo exportado: {APPROVED_PATH}"
+        )
+
+        log_message(
+            f"Archivo exportado: {PREMIUM_PATH}"
+        )
+
+        log_message(
+            f"Archivo exportado: {REJECTED_PATH}"
+        )
+
         # ============================================
-        # LOG FINAL
+        # TIEMPO EJECUCIÓN
         # ============================================
 
-        logging.info(
+        log_execution_time(
+            "VALIDACIÓN",
+            start_time
+        )
+
+        # ============================================
+        # FIN VALIDACIÓN
+        # ============================================
+
+        log_message(
             "==================================="
         )
 
-        logging.info(
+        log_message(
             "FIN VALIDACIÓN"
         )
 
-        logging.info(
+        log_message(
             "==================================="
         )
 
@@ -387,6 +493,10 @@ def validate_data():
     except Exception as e:
 
         logging.error(
+            f"ERROR VALIDACIÓN: {e}"
+        )
+
+        log_error(
             f"ERROR VALIDACIÓN: {e}"
         )
 

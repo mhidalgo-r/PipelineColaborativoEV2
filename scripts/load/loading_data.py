@@ -1,3 +1,4 @@
+
 # ============================================
 # scripts/load/loading_data.py
 # ============================================
@@ -5,11 +6,14 @@
 import pandas as pd
 import logging
 import os
+import time
 
 from dotenv import load_dotenv
 
 from sqlalchemy import create_engine
 from sqlalchemy import text
+
+from utils.pipeline_logger import *
 
 # ============================================
 # CARGAR ENV
@@ -68,8 +72,30 @@ def load_data():
 
     try:
 
+        start_time = time.time()
+
         print(
             "Iniciando carga..."
+        )
+
+        logging.info(
+            "==================================="
+        )
+
+        logging.info(
+            "INICIO CARGA"
+        )
+
+        logging.info(
+            "==================================="
+        )
+
+        log_section(
+            "ETAPA 5 - CARGA"
+        )
+
+        log_message(
+            "Inicio proceso carga"
         )
 
         # ============================================
@@ -81,6 +107,10 @@ def load_data():
             raise ValueError(
                 "DATABASE_URL no encontrada"
             )
+
+        log_message(
+            "DATABASE_URL encontrada"
+        )
 
         # ============================================
         # LEER CSV
@@ -98,12 +128,35 @@ def load_data():
             REJECTED_PATH
         )
 
+        log_message(
+            "Archivos CSV cargados correctamente"
+        )
+
+        log_message(
+            f"Clientes aprobados recibidos: "
+            f"{len(approved_df)}"
+        )
+
+        log_message(
+            f"Clientes premium recibidos: "
+            f"{len(premium_df)}"
+        )
+
+        log_message(
+            f"Clientes rechazados recibidos: "
+            f"{len(rejected_df)}"
+        )
+
         # ============================================
         # CONEXIÓN
         # ============================================
 
         engine = create_engine(
             DATABASE_URL
+        )
+
+        log_message(
+            "Conexión a PostgreSQL creada"
         )
 
         # ============================================
@@ -137,6 +190,10 @@ def load_data():
 
         logging.info(
             "Tablas eliminadas correctamente"
+        )
+
+        log_message(
+            "Tablas anteriores eliminadas"
         )
 
         # ============================================
@@ -177,6 +234,19 @@ def load_data():
 
             index=False
 
+        )
+
+        log_message(
+            "Tablas cargadas en PostgreSQL"
+        )
+
+        log_list(
+            "Tablas creadas",
+            [
+                "clientes_aprobados",
+                "clientes_premium",
+                "clientes_rechazados"
+            ]
         )
 
         # ============================================
@@ -244,7 +314,7 @@ def load_data():
         )
 
         # ============================================
-        # LOGGING
+        # LOGGING NORMAL
         # ============================================
 
         logging.info(
@@ -295,6 +365,45 @@ def load_data():
         )
 
         # ============================================
+        # REPORTE GLOBAL
+        # ============================================
+
+        log_message(
+            f"Clientes aprobados: "
+            f"{approved_count}"
+        )
+
+        log_message(
+            f"Clientes premium: "
+            f"{premium_count}"
+        )
+
+        log_message(
+            f"Clientes rechazados: "
+            f"{rejected_count}"
+        )
+
+        log_message(
+            f"Tasa aprobación: "
+            f"{approval_rate}%"
+        )
+
+        log_message(
+            f"Tasa premium: "
+            f"{premium_rate}%"
+        )
+
+        log_message(
+            f"Tasa rechazo: "
+            f"{rejection_rate}%"
+        )
+
+        log_message(
+            f"Probabilidad promedio: "
+            f"{avg_probability}%"
+        )
+
+        # ============================================
         # ALERTAS
         # ============================================
 
@@ -304,11 +413,40 @@ def load_data():
                 "ALERTA: Alta tasa rechazo"
             )
 
+            log_message(
+                "ALERTA: Alta tasa rechazo"
+            )
+
         if premium_rate < 20:
 
             logging.warning(
                 "ALERTA: Baja tasa premium"
             )
+
+            log_message(
+                "ALERTA: Baja tasa premium"
+            )
+
+        # ============================================
+        # TIEMPO EJECUCIÓN
+        # ============================================
+
+        log_execution_time(
+            "CARGA",
+            start_time
+        )
+
+        log_message(
+            "==================================="
+        )
+
+        log_message(
+            "FIN CARGA"
+        )
+
+        log_message(
+            "==================================="
+        )
 
         # ============================================
         # PRINTS
@@ -383,6 +521,10 @@ def load_data():
             f"ERROR LOAD: {e}"
         )
 
+        log_error(
+            f"ERROR LOAD: {e}"
+        )
+
         print(
             f"ERROR: {e}"
         )
@@ -396,3 +538,4 @@ def load_data():
 if __name__ == "__main__":
 
     load_data()
+

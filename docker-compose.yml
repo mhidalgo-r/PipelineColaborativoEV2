@@ -1,19 +1,14 @@
-
 services:
-
   bank-pipeline:
-
     build: .
-
     container_name: bank_marketing_pipeline
-
     env_file:
       - .env
-
+    environment:
+      - PYTHONPATH=/app
     volumes:
       - ./data:/app/data
       - ./logs:/app/logs
-
     command: >
       sh -c "
       python scripts/ingest/ingestion_data.py &&

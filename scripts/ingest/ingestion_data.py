@@ -5,6 +5,13 @@
 import pandas as pd
 import logging
 import os
+import time
+
+# ============================================
+# PIPELINE LOGGER
+# ============================================
+
+from utils.pipeline_logger import *
 
 # ============================================
 # CREAR CARPETAS
@@ -21,7 +28,7 @@ os.makedirs(
 )
 
 # ============================================
-# LOGGING
+# LOGGING INDIVIDUAL
 # ============================================
 
 logging.basicConfig(
@@ -76,11 +83,17 @@ REQUIRED_COLUMNS = [
 
 def ingest_data():
 
+    start_time = time.time()
+
     try:
 
         print(
             "Iniciando proceso de ingesta..."
         )
+
+        # ============================================
+        # LOG INDIVIDUAL
+        # ============================================
 
         logging.info(
             "==================================="
@@ -92,6 +105,20 @@ def ingest_data():
 
         logging.info(
             "==================================="
+        )
+
+        # ============================================
+        # LOG GLOBAL PIPELINE
+        # ============================================
+
+        start_pipeline()
+
+        log_section(
+            "ETAPA 1 - INGESTA"
+        )
+
+        log_message(
+            "Inicio proceso ingesta"
         )
 
         # ============================================
@@ -111,6 +138,15 @@ def ingest_data():
 
         logging.info(
             "Archivo origen encontrado"
+        )
+
+        log_message(
+            "Archivo origen encontrado"
+        )
+
+        log_metric(
+            "Ruta origen",
+            SOURCE_PATH
         )
 
         # ============================================
@@ -133,6 +169,10 @@ def ingest_data():
 
         logging.info(
             "Dataset leído correctamente"
+        )
+
+        log_message(
+            "Lectura CSV completada"
         )
 
         # ============================================
@@ -173,6 +213,15 @@ def ingest_data():
 
         logging.info(
             "Columnas validadas correctamente"
+        )
+
+        log_message(
+            "Columnas obligatorias validadas"
+        )
+
+        log_list(
+            "Columnas dataset",
+            list(df.columns)
         )
 
         # ============================================
@@ -224,7 +273,7 @@ def ingest_data():
         )
 
         # ============================================
-        # LOG KPIs
+        # LOG KPIs INDIVIDUALES
         # ============================================
 
         logging.info(
@@ -258,6 +307,40 @@ def ingest_data():
         )
 
         # ============================================
+        # LOG KPIs GLOBALES
+        # ============================================
+
+        log_metric(
+            "Clientes totales",
+            total_clients
+        )
+
+        log_metric(
+            "Clientes depósito YES",
+            deposit_yes
+        )
+
+        log_metric(
+            "Clientes depósito NO",
+            deposit_no
+        )
+
+        log_metric(
+            "Tasa conversión inicial",
+            f"{conversion_rate}%"
+        )
+
+        log_metric(
+            "Balance promedio",
+            avg_balance
+        )
+
+        log_metric(
+            "Edad promedio",
+            avg_age
+        )
+
+        # ============================================
         # ALERTAS
         # ============================================
 
@@ -267,10 +350,18 @@ def ingest_data():
                 "ALERTA: Conversión baja"
             )
 
+            log_message(
+                "ALERTA DETECTADA: Conversión baja"
+            )
+
         if avg_balance < 0:
 
             logging.warning(
                 "ALERTA: Balance promedio negativo"
+            )
+
+            log_message(
+                "ALERTA DETECTADA: Balance promedio negativo"
             )
 
         # ============================================
@@ -286,6 +377,28 @@ def ingest_data():
             f"Archivo RAW generado: "
             f"{OUTPUT_PATH}"
         )
+
+        log_message(
+            "Archivo RAW exportado"
+        )
+
+        log_metric(
+            "Ruta salida",
+            OUTPUT_PATH
+        )
+
+        # ============================================
+        # TIEMPO EJECUCIÓN
+        # ============================================
+
+        log_execution_time(
+            "INGESTA",
+            start_time
+        )
+
+        # ============================================
+        # FIN LOG INDIVIDUAL
+        # ============================================
 
         logging.info(
             "Proceso de ingesta finalizado"
@@ -336,6 +449,10 @@ def ingest_data():
     except Exception as e:
 
         logging.error(
+            f"ERROR INGESTA: {e}"
+        )
+
+        log_error(
             f"ERROR INGESTA: {e}"
         )
 

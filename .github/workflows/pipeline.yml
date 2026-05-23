@@ -1,177 +1,71 @@
 name: Bank Marketing ETL Pipeline
-
 on:
-
   push:
     branches:
-      - main
-
+      - feature/pipeline-final
   workflow_dispatch:
-
+env:
+  PYTHONPATH: ${{ github.workspace }}
 jobs:
-
   etl-pipeline:
-
     name: ETL Pipeline
-
     runs-on: ubuntu-latest
-
     steps:
-
-      # ============================================
-      # CLONAR REPOSITORIO
-      # ============================================
-
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      # ============================================
-      # CONFIGURAR PYTHON
-      # ============================================
-
       - name: Set up Python
         uses: actions/setup-python@v5
-
         with:
           python-version: '3.11'
-
-      # ============================================
-      # CACHE PIP
-      # ============================================
-
       - name: Cache pip dependencies
         uses: actions/cache@v4
-
         with:
           path: ~/.cache/pip
-
           key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
-
           restore-keys: |
             ${{ runner.os }}-pip-
-
-      # ============================================
-      # INSTALAR DEPENDENCIAS
-      # ============================================
-
       - name: Install dependencies
         run: |
-
           python -m pip install --upgrade pip
-
           pip install -r requirements.txt
-
-      # ============================================
-      # CREAR VARIABLES DE ENTORNO
-      # ============================================
-
       - name: Create .env file
         run: |
-
           echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" > .env
-
-      # ============================================
-      # CREAR CARPETAS NECESARIAS
-      # ============================================
-
       - name: Create directories
         run: |
-
           mkdir -p data/raw
           mkdir -p data/processed
           mkdir -p data/validated
           mkdir -p data/reject
           mkdir -p logs
-
-      # ============================================
-      # VERIFICAR DATASET
-      # ============================================
-
       - name: Verify dataset exists
         run: |
-
           ls -R data
-
-      # ============================================
-      # INGESTA
-      # ============================================
-
       - name: Run ingestion
-        run: |
-
-          python scripts/ingest/ingestion_data.py
-
-      # ============================================
-      # LIMPIEZA
-      # ============================================
-
+        run: python -m scripts.ingest.ingestion_data
       - name: Run cleaning
-        run: |
-
-          python scripts/cleaning/cleaning_data.py
-
-      # ============================================
-      # TRANSFORMACIÓN
-      # ============================================
-
+        run: python -m scripts.cleaning.cleaning_data
       - name: Run transformation
-        run: |
-
-          python scripts/transform/transform_data.py
-
-      # ============================================
-      # VALIDACIÓN
-      # ============================================
-
+        run: python -m scripts.transform.transform_data
       - name: Run validation
-        run: |
-
-          python scripts/validation/validation_data.py
-
-      # ============================================
-      # CARGA
-      # ============================================
-
+        run: python -m scripts.validation.validation_data
       - name: Run loading
-        run: |
-
-          python scripts/load/loading_data.py
-
-      # ============================================
-      # SUBIR LOGS COMO ARTEFACTOS
-      # ============================================
-
+        run: python -m scripts.load.loading_data
       - name: Upload logs
         uses: actions/upload-artifact@v4
-
         with:
           name: pipeline-logs
-
           path: logs/
-
-      # ============================================
-      # SUBIR CSV GENERADOS
-      # ============================================
-
       - name: Upload processed datasets
         uses: actions/upload-artifact@v4
-
         with:
           name: processed-data
-
           path: |
-
             data/processed/
             data/validated/
             data/reject/
-
-      # ============================================
-      # FINALIZACIÓN
-      # ============================================
-
       - name: Pipeline completed
         run: |
-
           echo "====================================="
           echo "PIPELINE EJECUTADO CORRECTAMENTE"
           echo "====================================="
