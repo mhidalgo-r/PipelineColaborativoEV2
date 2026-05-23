@@ -592,11 +592,11 @@ Este comando:
 Docker ejecuta:
 
 ```bash
-python scripts/ingest/ingestion_data.py &&
-python scripts/cleaning/cleaning_data.py &&
-python scripts/transform/transform_data.py &&
-python scripts/validation/validation_data.py &&
-python scripts/load/loading_data.py
+python -m scripts.ingest.ingestion_data
+python -m scripts.cleaning.cleaning_data
+python -m scripts.transform.transform_data
+python -m scripts.validation.validation_data
+python -m scripts.load.loading_data
 ```
 
 ---
