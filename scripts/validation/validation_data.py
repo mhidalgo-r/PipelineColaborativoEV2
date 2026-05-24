@@ -35,7 +35,8 @@ os.makedirs(
 logging.basicConfig(
     filename="logs/validation.log",
     level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s"
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    encoding="utf-8"
 )
 
 # ============================================
@@ -84,10 +85,6 @@ def validate_data():
             "==================================="
         )
 
-        # ============================================
-        # PIPELINE REPORT
-        # ============================================
-
         log_section(
             "ETAPA 4 - VALIDACIÓN"
         )
@@ -104,10 +101,6 @@ def validate_data():
             INPUT_PATH
         )
 
-        logging.info(
-            "Dataset transformado cargado"
-        )
-
         log_message(
             f"Dataset cargado: {INPUT_PATH}"
         )
@@ -117,25 +110,19 @@ def validate_data():
         )
 
         # ============================================
-        # VALIDACIONES ESTRUCTURALES
+        # VALIDACIÓN ESTRUCTURAL
         # ============================================
 
         valid_df = df[
 
             (df["age"] >= 18) &
             (df["age"] <= 85) &
-
             (df["day"] >= 1) &
             (df["day"] <= 31) &
-
             (df["duration"] >= 0) &
-
             (df["campaign"] >= 0) &
-
             (df["previous"] >= 0) &
-
             (df["pdays"] >= -1) &
-
             (
                 df[
                     "subscription_probability"
@@ -144,81 +131,99 @@ def validate_data():
 
         ]
 
-        log_message(
-            f"Registros válidos: {len(valid_df)}"
-        )
-
-        # ============================================
-        # RECHAZADOS ESTRUCTURALES
-        # ============================================
-
         rejected_structural = df[
             ~df.index.isin(valid_df.index)
-        ]
+        ].copy()
 
-        log_message(
-            f"Rechazos estructurales: "
-            f"{len(rejected_structural)}"
+        rejected_structural[
+            "validation_reason"
+        ] = (
+            "Error validación estructural"
         )
 
         # ============================================
-        # CLIENTES APROBADOS
+        # APROBADOS
         # ============================================
 
         approved_clients = valid_df[
-
             valid_df[
                 "approval_status"
             ] == "approved"
+        ].copy()
 
-        ]
+        approved_clients[
+            "validation_reason"
+        ] = (
+            "Aprobado | score="
+            + approved_clients[
+                "subscription_probability"
+            ].astype(str)
+            + " | "
+            + approved_clients[
+                "scoring_reason"
+            ]
+        )
 
         # ============================================
-        # CLIENTES RECHAZADOS
+        # RECHAZADOS NEGOCIO
+        # ============================================
+
+        rejected_business = valid_df[
+            valid_df[
+                "approval_status"
+            ] == "rejected"
+        ].copy()
+
+        rejected_business[
+            "validation_reason"
+        ] = (
+            "Rechazado | score="
+            + rejected_business[
+                "subscription_probability"
+            ].astype(str)
+            + " | "
+            + rejected_business[
+                "scoring_reason"
+            ]
+        )
+
+        # ============================================
+        # CONCATENAR RECHAZADOS
         # ============================================
 
         rejected_clients = pd.concat([
 
             rejected_structural,
-
-            valid_df[
-
-                valid_df[
-                    "approval_status"
-                ] == "rejected"
-
-            ]
+            rejected_business
 
         ])
 
         # ============================================
-        # CLIENTES PREMIUM
-        # SOLO CLIENTES CON premium_client == yes
+        # PREMIUM
         # ============================================
 
         premium_clients = approved_clients[
-
             approved_clients[
                 "premium_client"
             ] == "yes"
+        ].copy()
 
-        ]
+        premium_clients[
+            "validation_reason"
+        ] = (
+            "Cliente premium | score="
+            + premium_clients[
+                "subscription_probability"
+            ].astype(str)
+            + " | "
+            + premium_clients[
+                "scoring_reason"
+            ]
+        )
 
         # ============================================
-        # ELIMINAR DUPLICADOS
+        # DUPLICADOS
         # ============================================
-
-        approved_before = len(
-            approved_clients
-        )
-
-        rejected_before = len(
-            rejected_clients
-        )
-
-        premium_before = len(
-            premium_clients
-        )
 
         approved_clients = (
             approved_clients
@@ -233,21 +238,6 @@ def validate_data():
         premium_clients = (
             premium_clients
             .drop_duplicates()
-        )
-
-        log_message(
-            f"Duplicados eliminados aprobados: "
-            f"{approved_before - len(approved_clients)}"
-        )
-
-        log_message(
-            f"Duplicados eliminados rechazados: "
-            f"{rejected_before - len(rejected_clients)}"
-        )
-
-        log_message(
-            f"Duplicados eliminados premium: "
-            f"{premium_before - len(premium_clients)}"
         )
 
         # ============================================
@@ -272,128 +262,70 @@ def validate_data():
         )
 
         approval_rate = round(
-
             (
                 approved_count /
                 total_clients
             ) * 100,
-
             2
-
         )
 
         rejection_rate = round(
-
             (
                 rejected_count /
                 total_clients
             ) * 100,
-
             2
-
         )
 
         premium_rate = round(
-
             (
                 premium_count /
                 approved_count
             ) * 100,
-
             2
-
         )
 
         avg_probability = round(
-
             approved_clients[
                 "subscription_probability"
             ].mean(),
-
             2
-
-        )
-
-        avg_premium_probability = round(
-
-            premium_clients[
-                "subscription_probability"
-            ].mean(),
-
-            2
-
         )
 
         # ============================================
-        # LOG KPIs
+        # LOGS
         # ============================================
 
         log_message(
-            f"Clientes aprobados: "
-            f"{approved_count}"
+            f"Clientes aprobados: {approved_count}"
         )
 
         log_message(
-            f"Clientes rechazados: "
-            f"{rejected_count}"
+            f"Clientes rechazados: {rejected_count}"
         )
 
         log_message(
-            f"Clientes premium: "
-            f"{premium_count}"
+            f"Clientes premium: {premium_count}"
         )
 
         log_message(
-            f"Tasa aprobación: "
-            f"{approval_rate}%"
+            f"Tasa aprobación: {approval_rate}%"
         )
 
         log_message(
-            f"Tasa rechazo: "
-            f"{rejection_rate}%"
+            f"Tasa rechazo: {rejection_rate}%"
         )
 
         log_message(
-            f"Tasa premium: "
-            f"{premium_rate}%"
+            f"Tasa premium: {premium_rate}%"
         )
 
         log_message(
-            f"Probabilidad promedio: "
-            f"{avg_probability}%"
-        )
-
-        log_message(
-            f"Probabilidad promedio premium: "
-            f"{avg_premium_probability}%"
+            f"Probabilidad promedio: {avg_probability}%"
         )
 
         # ============================================
-        # ALERTAS
-        # ============================================
-
-        if rejection_rate > 20:
-
-            logging.warning(
-                "ALERTA: Alta tasa rechazo"
-            )
-
-            log_message(
-                "ALERTA: Alta tasa rechazo"
-            )
-
-        if premium_rate < 20:
-
-            logging.warning(
-                "ALERTA: Baja tasa premium"
-            )
-
-            log_message(
-                "ALERTA: Baja tasa premium"
-            )
-
-        # ============================================
-        # EXPORTAR CSV
+        # EXPORTAR
         # ============================================
 
         approved_clients.to_csv(
@@ -411,24 +343,20 @@ def validate_data():
             index=False
         )
 
-        logging.info(
-            "CSV exportados correctamente"
+        log_message(
+            f"Archivo aprobados: {APPROVED_PATH}"
         )
 
         log_message(
-            f"Archivo exportado: {APPROVED_PATH}"
+            f"Archivo premium: {PREMIUM_PATH}"
         )
 
         log_message(
-            f"Archivo exportado: {PREMIUM_PATH}"
-        )
-
-        log_message(
-            f"Archivo exportado: {REJECTED_PATH}"
+            f"Archivo rechazados: {REJECTED_PATH}"
         )
 
         # ============================================
-        # TIEMPO EJECUCIÓN
+        # TIEMPO
         # ============================================
 
         log_execution_time(
@@ -436,58 +364,20 @@ def validate_data():
             start_time
         )
 
-        # ============================================
-        # FIN VALIDACIÓN
-        # ============================================
-
-        log_message(
+        logging.info(
             "==================================="
         )
 
-        log_message(
+        logging.info(
             "FIN VALIDACIÓN"
         )
 
-        log_message(
+        logging.info(
             "==================================="
         )
 
-        # ============================================
-        # PRINTS
-        # ============================================
-
         print(
             "Validación completada"
-        )
-
-        print(
-            f"Aprobados: "
-            f"{approved_count}"
-        )
-
-        print(
-            f"Premium: "
-            f"{premium_count}"
-        )
-
-        print(
-            f"Rechazados: "
-            f"{rejected_count}"
-        )
-
-        print(
-            f"Tasa aprobación: "
-            f"{approval_rate}%"
-        )
-
-        print(
-            f"Tasa premium: "
-            f"{premium_rate}%"
-        )
-
-        print(
-            f"Tasa rechazo: "
-            f"{rejection_rate}%"
         )
 
     except Exception as e:

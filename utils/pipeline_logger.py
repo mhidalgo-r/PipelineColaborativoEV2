@@ -35,7 +35,7 @@ pipeline_logger.setLevel(
 if not pipeline_logger.handlers:
 
     file_handler = logging.FileHandler(
-        "logs/reporte_pipeline.log",
+        "logs/pipeline_report.log",
         mode="a",
         encoding="utf-8"
     )

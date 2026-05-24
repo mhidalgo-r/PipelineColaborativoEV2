@@ -7,14 +7,10 @@ import logging
 import os
 import time
 
-# ============================================
-# PIPELINE LOGGER
-# ============================================
-
 from utils.pipeline_logger import *
 
 # ============================================
-# CREAR CARPETAS
+# CARPETAS
 # ============================================
 
 os.makedirs(
@@ -28,54 +24,27 @@ os.makedirs(
 )
 
 # ============================================
-# LOGGING INDIVIDUAL
+# LOGGING
 # ============================================
 
 logging.basicConfig(
     filename="logs/ingestion.log",
     level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s"
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    encoding="utf-8"
 )
 
 # ============================================
 # PATHS
 # ============================================
 
-# DATASET ORIGINAL
-SOURCE_PATH = (
+INPUT_PATH = (
     "data/source/02_bank.csv"
 )
 
-# DATASET RAW
 OUTPUT_PATH = (
     "data/raw/02_bank.csv"
 )
-
-# ============================================
-# COLUMNAS OBLIGATORIAS
-# ============================================
-
-REQUIRED_COLUMNS = [
-
-    "age",
-    "job",
-    "marital",
-    "education",
-    "default",
-    "balance",
-    "housing",
-    "loan",
-    "contact",
-    "day",
-    "month",
-    "duration",
-    "campaign",
-    "pdays",
-    "previous",
-    "poutcome",
-    "deposit"
-
-]
 
 # ============================================
 # INGESTA
@@ -83,35 +52,13 @@ REQUIRED_COLUMNS = [
 
 def ingest_data():
 
-    start_time = time.time()
-
     try:
+
+        start_time = time.time()
 
         print(
             "Iniciando proceso de ingesta..."
         )
-
-        # ============================================
-        # LOG INDIVIDUAL
-        # ============================================
-
-        logging.info(
-            "==================================="
-        )
-
-        logging.info(
-            "INICIO INGESTA"
-        )
-
-        logging.info(
-            "==================================="
-        )
-
-        # ============================================
-        # LOG GLOBAL PIPELINE
-        # ============================================
-
-        start_pipeline()
 
         log_section(
             "ETAPA 1 - INGESTA"
@@ -126,49 +73,27 @@ def ingest_data():
         # ============================================
 
         if not os.path.exists(
-            SOURCE_PATH
+            INPUT_PATH
         ):
 
             raise FileNotFoundError(
-
-                f"No existe el archivo: "
-                f"{SOURCE_PATH}"
-
+                f"No existe: {INPUT_PATH}"
             )
-
-        logging.info(
-            "Archivo origen encontrado"
-        )
 
         log_message(
             "Archivo origen encontrado"
         )
 
-        log_metric(
-            "Ruta origen",
-            SOURCE_PATH
+        log_message(
+            f"Ruta origen: {INPUT_PATH}"
         )
 
         # ============================================
-        # LEER DATASET
+        # LEER CSV
         # ============================================
 
         df = pd.read_csv(
-            SOURCE_PATH
-        )
-
-        # ============================================
-        # VALIDAR DATASET VACÍO
-        # ============================================
-
-        if df.empty:
-
-            raise ValueError(
-                "El dataset está vacío"
-            )
-
-        logging.info(
-            "Dataset leído correctamente"
+            INPUT_PATH
         )
 
         log_message(
@@ -176,44 +101,25 @@ def ingest_data():
         )
 
         # ============================================
-        # LIMPIAR NOMBRES COLUMNAS
-        # ============================================
-
-        df.columns = (
-
-            df.columns
-            .str.strip()
-            .str.lower()
-
-        )
-
-        # ============================================
         # VALIDAR COLUMNAS
         # ============================================
 
-        missing_columns = [
+        required_columns = [
 
-            col
-
-            for col in REQUIRED_COLUMNS
-
-            if col not in df.columns
+            "age",
+            "job",
+            "balance",
+            "deposit"
 
         ]
 
-        if missing_columns:
+        for col in required_columns:
 
-            raise ValueError(
+            if col not in df.columns:
 
-                f"Faltan columnas "
-                f"obligatorias: "
-                f"{missing_columns}"
-
-            )
-
-        logging.info(
-            "Columnas validadas correctamente"
-        )
+                raise Exception(
+                    f"Falta columna: {col}"
+                )
 
         log_message(
             "Columnas obligatorias validadas"
@@ -221,35 +127,32 @@ def ingest_data():
 
         log_list(
             "Columnas dataset",
-            list(df.columns)
+            df.columns.tolist()
         )
 
         # ============================================
-        # KPIs INICIALES
+        # KPIs
         # ============================================
 
         total_clients = len(df)
 
-        deposit_yes = len(
-
+        yes_clients = len(
             df[
                 df["deposit"] == "yes"
             ]
-
         )
 
-        deposit_no = len(
-
+        no_clients = len(
             df[
                 df["deposit"] == "no"
             ]
-
         )
 
         conversion_rate = round(
 
             (
-                deposit_yes / total_clients
+                yes_clients /
+                total_clients
             ) * 100,
 
             2
@@ -273,41 +176,7 @@ def ingest_data():
         )
 
         # ============================================
-        # LOG KPIs INDIVIDUALES
-        # ============================================
-
-        logging.info(
-            f"Clientes totales: "
-            f"{total_clients}"
-        )
-
-        logging.info(
-            f"Clientes depósito YES: "
-            f"{deposit_yes}"
-        )
-
-        logging.info(
-            f"Clientes depósito NO: "
-            f"{deposit_no}"
-        )
-
-        logging.info(
-            f"Tasa conversión inicial: "
-            f"{conversion_rate}%"
-        )
-
-        logging.info(
-            f"Balance promedio: "
-            f"{avg_balance}"
-        )
-
-        logging.info(
-            f"Edad promedio: "
-            f"{avg_age}"
-        )
-
-        # ============================================
-        # LOG KPIs GLOBALES
+        # LOG KPIs
         # ============================================
 
         log_metric(
@@ -317,12 +186,12 @@ def ingest_data():
 
         log_metric(
             "Clientes depósito YES",
-            deposit_yes
+            yes_clients
         )
 
         log_metric(
             "Clientes depósito NO",
-            deposit_no
+            no_clients
         )
 
         log_metric(
@@ -341,31 +210,7 @@ def ingest_data():
         )
 
         # ============================================
-        # ALERTAS
-        # ============================================
-
-        if conversion_rate < 10:
-
-            logging.warning(
-                "ALERTA: Conversión baja"
-            )
-
-            log_message(
-                "ALERTA DETECTADA: Conversión baja"
-            )
-
-        if avg_balance < 0:
-
-            logging.warning(
-                "ALERTA: Balance promedio negativo"
-            )
-
-            log_message(
-                "ALERTA DETECTADA: Balance promedio negativo"
-            )
-
-        # ============================================
-        # EXPORTAR RAW
+        # EXPORTAR
         # ============================================
 
         df.to_csv(
@@ -373,22 +218,16 @@ def ingest_data():
             index=False
         )
 
-        logging.info(
-            f"Archivo RAW generado: "
-            f"{OUTPUT_PATH}"
-        )
-
         log_message(
             "Archivo RAW exportado"
         )
 
-        log_metric(
-            "Ruta salida",
-            OUTPUT_PATH
+        log_message(
+            f"Ruta salida: {OUTPUT_PATH}"
         )
 
         # ============================================
-        # TIEMPO EJECUCIÓN
+        # TIEMPO
         # ============================================
 
         log_execution_time(
@@ -396,61 +235,15 @@ def ingest_data():
             start_time
         )
 
-        # ============================================
-        # FIN LOG INDIVIDUAL
-        # ============================================
-
-        logging.info(
-            "Proceso de ingesta finalizado"
-        )
-
-        logging.info(
-            "==================================="
-        )
-
-        logging.info(
+        log_message(
             "FIN INGESTA"
         )
-
-        logging.info(
-            "==================================="
-        )
-
-        # ============================================
-        # PRINTS
-        # ============================================
 
         print(
             "Ingesta completada correctamente"
         )
 
-        print(
-            f"Clientes totales: "
-            f"{total_clients}"
-        )
-
-        print(
-            f"Tasa conversión inicial: "
-            f"{conversion_rate}%"
-        )
-
-        print(
-            f"Balance promedio: "
-            f"{avg_balance}"
-        )
-
-        print(
-            f"Edad promedio: "
-            f"{avg_age}"
-        )
-
-        return df
-
     except Exception as e:
-
-        logging.error(
-            f"ERROR INGESTA: {e}"
-        )
 
         log_error(
             f"ERROR INGESTA: {e}"

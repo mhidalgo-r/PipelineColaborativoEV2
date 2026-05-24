@@ -7,35 +7,44 @@ import logging
 import os
 import time
 
-# ============================================
-# PIPELINE LOGGER
-# ============================================
-
 from utils.pipeline_logger import *
 
 # ============================================
-# CARPETAS
+# CREAR CARPETAS
 # ============================================
 
-os.makedirs("logs", exist_ok=True)
+os.makedirs(
+    "logs",
+    exist_ok=True
+)
+
+os.makedirs(
+    "data/processed",
+    exist_ok=True
+)
 
 # ============================================
-# LOGGING INDIVIDUAL
+# LOGGING
 # ============================================
 
 logging.basicConfig(
     filename="logs/transformation.log",
     level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s"
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    encoding="utf-8"
 )
 
 # ============================================
 # PATHS
 # ============================================
 
-INPUT_PATH = "data/processed/bank_cleaned.csv"
+INPUT_PATH = (
+    "data/processed/bank_cleaned.csv"
+)
 
-OUTPUT_PATH = "data/processed/bank_transformed.csv"
+OUTPUT_PATH = (
+    "data/processed/bank_transformed.csv"
+)
 
 # ============================================
 # TRANSFORMACIÓN
@@ -43,23 +52,25 @@ OUTPUT_PATH = "data/processed/bank_transformed.csv"
 
 def transform_data():
 
-    start_time = time.time()
-
     try:
 
-        print("Iniciando transformación...")
+        start_time = time.time()
 
-        # ============================================
-        # LOG INDIVIDUAL
-        # ============================================
+        print(
+            "Iniciando transformación..."
+        )
 
-        logging.info("===================================")
-        logging.info("INICIO TRANSFORMACIÓN")
-        logging.info("===================================")
+        logging.info(
+            "==================================="
+        )
 
-        # ============================================
-        # LOG GLOBAL PIPELINE
-        # ============================================
+        logging.info(
+            "INICIO TRANSFORMACIÓN"
+        )
+
+        logging.info(
+            "==================================="
+        )
 
         log_section(
             "ETAPA 3 - TRANSFORMACIÓN"
@@ -73,17 +84,12 @@ def transform_data():
         # LEER DATASET
         # ============================================
 
-        df = pd.read_csv(INPUT_PATH)
-
-        total_clients = len(df)
-
-        logging.info(
-            f"Clientes recibidos: {total_clients}"
+        df = pd.read_csv(
+            INPUT_PATH
         )
 
-        log_metric(
-            "Clientes recibidos",
-            total_clients
+        log_message(
+            f"Clientes recibidos: {len(df)}"
         )
 
         # ============================================
@@ -91,22 +97,22 @@ def transform_data():
         # ============================================
 
         binary_columns = [
+
             "default",
             "housing",
             "loan",
             "deposit"
+
         ]
 
-        for col in binary_columns:
+        for column in binary_columns:
 
-            df[col] = df[col].map({
+            df[column] = df[column].map({
+
                 "yes": 1,
                 "no": 0
-            })
 
-        logging.info(
-            "Variables binarias transformadas"
-        )
+            })
 
         log_message(
             "Conversión variables binarias completada"
@@ -118,26 +124,28 @@ def transform_data():
         )
 
         # ============================================
-        # GRUPOS ETARIOS
+        # SEGMENTACIÓN ETARIA
         # ============================================
 
         df["age_group"] = pd.cut(
 
             df["age"],
 
-            bins=[18, 25, 40, 60, 85],
+            bins=[
+                18,
+                30,
+                45,
+                60,
+                100
+            ],
 
             labels=[
                 "young",
                 "adult",
-                "mature",
-                "senior"
+                "senior",
+                "elder"
             ]
 
-        )
-
-        logging.info(
-            "Grupos etarios generados"
         )
 
         log_message(
@@ -145,123 +153,104 @@ def transform_data():
         )
 
         # ============================================
-        # VARIABLES NUEVAS
-        # ============================================
-
-        probabilities = []
-        warnings_list = []
-        risk_levels = []
-        approvals = []
-        rejection_reasons = []
-        premium_clients = []
-
-        # ============================================
-        # SCORING
+        # MOTOR SCORING
         # ============================================
 
         log_message(
-            "Inicio motor scoring bancario"
+            "Inicio motor scoring comercial"
         )
+
+        probability = []
+
+        risk_level = []
+
+        approval_status = []
+
+        premium_client = []
+
+        scoring_reason = []
 
         for _, row in df.iterrows():
 
-            probability = 50
-            warnings = 0
+            score = 50
+
             reasons = []
-
-            # ============================================
-            # AGE
-            # ============================================
-
-            if row["age"] > 85:
-
-                probability = 0
-
-                warnings += 999
-
-                reasons.append(
-                    "Edad mayor a 85 años"
-                )
-
-            elif 30 <= row["age"] <= 55:
-
-                probability += 10
-
-            elif row["age"] >= 75:
-
-                probability -= 20
-
-                warnings += 2
-
-            # ============================================
-            # JOB
-            # ============================================
-
-            good_jobs = [
-
-                "admin.",
-                "management",
-                "technician",
-                "entrepreneur"
-
-            ]
-
-            risky_jobs = [
-                "unemployed",
-                "unknown"
-            ]
-
-            if row["job"] in good_jobs:
-
-                probability += 15
-
-            elif row["job"] in risky_jobs:
-
-                probability -= 20
-
-                warnings += 2
-
-                reasons.append(
-                    "Trabajo riesgoso"
-                )
-
-            # ============================================
-            # EDUCATION
-            # ============================================
-
-            if row["education"] == "tertiary":
-
-                probability += 10
-
-            elif row["education"] == "primary":
-
-                probability -= 5
-
-            elif row["education"] == "unknown":
-
-                warnings += 1
 
             # ============================================
             # BALANCE
             # ============================================
 
-            if row["balance"] < 0:
+            if row["balance"] > 2000:
 
-                probability -= 30
-
-                warnings += 3
+                score += 20
 
                 reasons.append(
-                    "Balance negativo"
+                    "balance alto"
                 )
 
-            elif row["balance"] >= 5000:
+            elif row["balance"] < 0:
 
-                probability += 15
+                score -= 15
 
-            elif row["balance"] >= 1000:
+                reasons.append(
+                    "balance negativo"
+                )
 
-                probability += 8
+            # ============================================
+            # CLIENTE YA ACEPTÓ DEPÓSITO
+            # ============================================
+
+            if row["deposit"] == 1:
+
+                score += 15
+
+                reasons.append(
+                    "cliente con depósito previo"
+                )
+
+            # ============================================
+            # DURACIÓN LLAMADA
+            # ============================================
+
+            if row["duration"] > 300:
+
+                score += 15
+
+                reasons.append(
+                    "duración llamada alta"
+                )
+
+            elif row["duration"] < 100:
+
+                score -= 10
+
+                reasons.append(
+                    "duración llamada baja"
+                )
+
+            # ============================================
+            # PRÉSTAMO PERSONAL
+            # ============================================
+
+            if row["loan"] == 1:
+
+                score -= 15
+
+                reasons.append(
+                    "cliente con préstamo personal"
+                )
+
+            # ============================================
+            # CRÉDITO HIPOTECARIO
+            # ============================================
+
+            if row["housing"] == 1:
+
+                score += 5
+
+                reasons.append(
+                    "cliente hipotecario estable"
+                )
 
             # ============================================
             # DEFAULT
@@ -269,228 +258,142 @@ def transform_data():
 
             if row["default"] == 1:
 
-                probability -= 40
-
-                warnings += 3
+                score -= 30
 
                 reasons.append(
-                    "Cliente con default"
+                    "cliente en default"
                 )
 
             # ============================================
-            # PRÉSTAMOS
-            # ============================================
-
-            if (
-                row["default"] == 1 and
-                row["housing"] == 1 and
-                row["loan"] == 1
-            ):
-
-                probability = 0
-
-                warnings += 999
-
-                reasons.append(
-                    "Default y múltiples préstamos"
-                )
-
-            if row["housing"] == 1:
-
-                probability -= 10
-
-                warnings += 1
-
-            if row["loan"] == 1:
-
-                probability -= 15
-
-                warnings += 1
-
-            # ============================================
-            # CONTACT
-            # ============================================
-
-            if row["contact"] == "cellular":
-
-                probability += 10
-
-            elif row["contact"] == "telephone":
-
-                probability += 5
-
-            else:
-
-                probability -= 10
-
-                warnings += 2
-
-                reasons.append(
-                    "Contacto desconocido"
-                )
-
-            # ============================================
-            # DURACIÓN
-            # ============================================
-
-            if row["duration"] >= 300:
-
-                probability += 20
-
-            elif row["duration"] < 60:
-
-                probability -= 10
-
-                warnings += 1
-
-            # ============================================
-            # CAMPAIGN
-            # ============================================
-
-            if row["campaign"] > 10:
-
-                probability -= 15
-
-                warnings += 2
-
-                reasons.append(
-                    "Demasiados contactos"
-                )
-
-            elif row["campaign"] <= 3:
-
-                probability += 5
-
-            # ============================================
-            # RESULTADO ANTERIOR
+            # RESULTADO CAMPAÑA ANTERIOR
             # ============================================
 
             if row["poutcome"] == "success":
 
-                probability += 20
+                score += 25
+
+                reasons.append(
+                    "campaña anterior exitosa"
+                )
 
             elif row["poutcome"] == "failure":
 
-                probability -= 10
+                score -= 10
+
+                reasons.append(
+                    "campaña anterior fallida"
+                )
 
             # ============================================
-            # LIMITAR %
+            # AJUSTE SCORE
             # ============================================
 
-            probability = max(
+            score = max(
                 0,
-                min(probability, 100)
+                min(score, 100)
             )
 
-            probabilities.append(
-                probability
-            )
-
-            warnings_list.append(
-                warnings
+            probability.append(
+                score
             )
 
             # ============================================
-            # RISK LEVEL
+            # CLASIFICACIÓN
             # ============================================
 
-            if warnings >= 999:
+            if score >= 80:
 
-                risk = "critical"
+                risk_level.append(
+                    "low"
+                )
 
-            elif warnings >= 6:
+                approval_status.append(
+                    "approved"
+                )
 
-                risk = "high"
-
-            elif warnings >= 3:
-
-                risk = "medium"
-
-            else:
-
-                risk = "low"
-
-            risk_levels.append(risk)
-
-            # ============================================
-            # APROBACIÓN
-            # ============================================
-
-            if probability >= 70:
-
-                approval = "approved"
-
-            elif risk == "critical":
-
-                approval = "rejected"
-
-            elif warnings >= 6:
-
-                approval = "rejected"
-
-            else:
-
-                approval = "approved"
-
-            approvals.append(
-                approval
-            )
-
-            # ============================================
-            # CLIENTE PREMIUM
-            # ============================================
-
-            if (
-                probability >= 85 and
-                warnings <= 1 and
-                row["balance"] >= 5000
-            ):
-
-                premium_clients.append(
+                premium_client.append(
                     "yes"
+                )
+
+            elif score >= 60:
+
+                risk_level.append(
+                    "medium"
+                )
+
+                approval_status.append(
+                    "approved"
+                )
+
+                premium_client.append(
+                    "no"
+                )
+
+            elif score >= 40:
+
+                risk_level.append(
+                    "high"
+                )
+
+                approval_status.append(
+                    "rejected"
+                )
+
+                premium_client.append(
+                    "no"
                 )
 
             else:
 
-                premium_clients.append(
+                risk_level.append(
+                    "critical"
+                )
+
+                approval_status.append(
+                    "rejected"
+                )
+
+                premium_client.append(
                     "no"
                 )
 
             # ============================================
-            # MOTIVO RECHAZO
+            # MOTIVO SCORE
             # ============================================
 
             if len(reasons) == 0:
 
-                rejection_reasons.append(
-                    "Sin observaciones"
+                reasons.append(
+                    "perfil neutro"
                 )
 
-            else:
-
-                rejection_reasons.append(
-                    ", ".join(reasons)
-                )
+            scoring_reason.append(
+                ", ".join(reasons)
+            )
 
         # ============================================
         # NUEVAS COLUMNAS
         # ============================================
 
-        df["subscription_probability"] = probabilities
+        df[
+            "subscription_probability"
+        ] = probability
 
-        df["warning_count"] = warnings_list
+        df[
+            "risk_level"
+        ] = risk_level
 
-        df["risk_level"] = risk_levels
+        df[
+            "approval_status"
+        ] = approval_status
 
-        df["approval_status"] = approvals
+        df[
+            "premium_client"
+        ] = premium_client
 
-        df["rejection_reason"] = rejection_reasons
-
-        df["premium_client"] = premium_clients
-
-        logging.info(
-            "Variables derivadas generadas"
-        )
+        df[
+            "scoring_reason"
+        ] = scoring_reason
 
         log_message(
             "Variables enriquecidas agregadas"
@@ -500,39 +403,67 @@ def transform_data():
         # KPIs
         # ============================================
 
-        approved = len(
+        approved_clients = len(
+
             df[
-                df["approval_status"] == "approved"
+                df[
+                    "approval_status"
+                ] == "approved"
             ]
+
         )
 
-        rejected = len(
+        rejected_clients = len(
+
             df[
-                df["approval_status"] == "rejected"
+                df[
+                    "approval_status"
+                ] == "rejected"
             ]
+
         )
 
-        premium = len(
-            df[
-                df["premium_client"] == "yes"
-            ]
-        )
+        premium_clients = len(
 
-        total = len(df)
+            df[
+                df[
+                    "premium_client"
+                ] == "yes"
+            ]
+
+        )
 
         approval_rate = round(
-            (approved / total) * 100,
+
+            (
+                approved_clients /
+                len(df)
+            ) * 100,
+
             2
+
         )
 
         rejection_rate = round(
-            (rejected / total) * 100,
+
+            (
+                rejected_clients /
+                len(df)
+            ) * 100,
+
             2
+
         )
 
         premium_rate = round(
-            (premium / approved) * 100,
+
+            (
+                premium_clients /
+                approved_clients
+            ) * 100,
+
             2
+
         )
 
         avg_probability = round(
@@ -546,87 +477,36 @@ def transform_data():
         )
 
         # ============================================
-        # LOG KPIs INDIVIDUALES
+        # LOG KPIs
         # ============================================
 
-        logging.info(
+        log_message(
+            f"Clientes aprobados: {approved_clients}"
+        )
+
+        log_message(
+            f"Clientes rechazados: {rejected_clients}"
+        )
+
+        log_message(
+            f"Clientes premium: {premium_clients}"
+        )
+
+        log_message(
             f"Tasa aprobación: {approval_rate}%"
         )
 
-        logging.info(
+        log_message(
             f"Tasa rechazo: {rejection_rate}%"
         )
 
-        logging.info(
+        log_message(
             f"Tasa premium: {premium_rate}%"
         )
 
-        logging.info(
+        log_message(
             f"Probabilidad promedio: {avg_probability}%"
         )
-
-        # ============================================
-        # LOG KPIs GLOBALES
-        # ============================================
-
-        log_metric(
-            "Clientes aprobados",
-            approved
-        )
-
-        log_metric(
-            "Clientes rechazados",
-            rejected
-        )
-
-        log_metric(
-            "Clientes premium",
-            premium
-        )
-
-        log_metric(
-            "Tasa aprobación",
-            f"{approval_rate}%"
-        )
-
-        log_metric(
-            "Tasa rechazo",
-            f"{rejection_rate}%"
-        )
-
-        log_metric(
-            "Tasa premium",
-            f"{premium_rate}%"
-        )
-
-        log_metric(
-            "Probabilidad promedio",
-            f"{avg_probability}%"
-        )
-
-        # ============================================
-        # ALERTAS
-        # ============================================
-
-        if rejection_rate > 20:
-
-            logging.warning(
-                "ALERTA: Alta tasa rechazo"
-            )
-
-            log_message(
-                "ALERTA DETECTADA: Alta tasa rechazo"
-            )
-
-        if avg_probability < 40:
-
-            logging.warning(
-                "ALERTA: Baja probabilidad promedio"
-            )
-
-            log_message(
-                "ALERTA DETECTADA: Baja probabilidad promedio"
-            )
 
         # ============================================
         # EXPORTAR
@@ -637,21 +517,12 @@ def transform_data():
             index=False
         )
 
-        logging.info(
+        log_message(
             f"Archivo exportado: {OUTPUT_PATH}"
         )
 
-        log_message(
-            "Dataset transformado exportado"
-        )
-
-        log_metric(
-            "Ruta salida",
-            OUTPUT_PATH
-        )
-
         # ============================================
-        # TIEMPO EJECUCIÓN
+        # TIEMPO
         # ============================================
 
         log_execution_time(
@@ -659,34 +530,20 @@ def transform_data():
             start_time
         )
 
-        # ============================================
-        # FIN LOG INDIVIDUAL
-        # ============================================
+        logging.info(
+            "==================================="
+        )
 
-        logging.info("===================================")
-        logging.info("FIN TRANSFORMACIÓN")
-        logging.info("===================================")
+        logging.info(
+            "FIN TRANSFORMACIÓN"
+        )
 
-        # ============================================
-        # PRINTS
-        # ============================================
-
-        print("Transformación completada")
-
-        print(
-            f"Clientes aprobados: {approved}"
+        logging.info(
+            "==================================="
         )
 
         print(
-            f"Clientes rechazados: {rejected}"
-        )
-
-        print(
-            f"Clientes premium: {premium}"
-        )
-
-        print(
-            f"Probabilidad promedio: {avg_probability}%"
+            "Transformación completada"
         )
 
     except Exception as e:
@@ -699,9 +556,16 @@ def transform_data():
             f"ERROR TRANSFORMACIÓN: {e}"
         )
 
-        print(f"ERROR: {e}")
+        print(
+            f"ERROR: {e}"
+        )
 
         raise
 
+# ============================================
+# EJECUCIÓN
+# ============================================
+
 if __name__ == "__main__":
+
     transform_data()
