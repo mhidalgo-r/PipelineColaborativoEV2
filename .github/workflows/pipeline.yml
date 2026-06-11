@@ -1,22 +1,38 @@
-name: Bank Marketing ETL Pipeline
+name: Bank Marketing Pipeline EV3
+
 on:
   push:
     branches:
-      - feature/pipeline-reportes
+      - main
+      - feature/pipeline-ev3
   workflow_dispatch:
+
 env:
   PYTHONPATH: ${{ github.workspace }}
+
 jobs:
-  etl-pipeline:
-    name: ETL Pipeline
+  pipeline-ev3:
+    name: Pipeline Completo EV3
     runs-on: ubuntu-latest
+
     steps:
+      # ==============================
+      # 1. CHECKOUT
+      # ==============================
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      # ==============================
+      # 2. PYTHON
+      # ==============================
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+
+      # ==============================
+      # 3. CACHE DEPENDENCIAS
+      # ==============================
       - name: Cache pip dependencies
         uses: actions/cache@v4
         with:
@@ -24,38 +40,103 @@ jobs:
           key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-
+
+      # ==============================
+      # 4. INSTALAR DEPENDENCIAS
+      # ==============================
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+
+      # ==============================
+      # 5. CREAR .env
+      # ==============================
       - name: Create .env file
         run: |
           echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" > .env
+
+      # ==============================
+      # 6. CREAR DIRECTORIOS
+      # ==============================
       - name: Create directories
         run: |
           mkdir -p data/raw
           mkdir -p data/processed
           mkdir -p data/validated
           mkdir -p data/reject
+          mkdir -p data/outputs
           mkdir -p logs
+          mkdir -p models
+          mkdir -p reports/figures
+
+      # ==============================
+      # 7. VERIFICAR DATASET
+      # ==============================
       - name: Verify dataset exists
         run: |
-          ls -R data
+          ls -R data/source
+
+      # ==============================
+      # 8. ETL PIPELINE (EV2)
+      # ==============================
       - name: Run ingestion
         run: python -m scripts.ingest.ingestion_data
+
       - name: Run cleaning
         run: python -m scripts.cleaning.cleaning_data
+
       - name: Run transformation
         run: python -m scripts.transform.transform_data
+
       - name: Run validation
         run: python -m scripts.validation.validation_data
+
       - name: Run loading
         run: python -m scripts.load.loading_data
+
+      # ==============================
+      # 9. EDA (NUEVO EV3)
+      # ==============================
+      - name: Run quality analysis
+        run: python -m scripts.eda.quality_analysis
+
+      - name: Run visual EDA
+        run: python -m scripts.eda.visual_eda
+
+      # ==============================
+      # 10. MODELO IA (NUEVO EV3)
+      # ==============================
+      - name: Train model
+        run: python -m scripts.modeling.train_model
+
+      - name: Evaluate model
+        run: python -m scripts.modeling.evaluate_model
+
+      # ==============================
+      # 11. SEGURIDAD (NUEVO EV3)
+      # ==============================
+      - name: Run security audit
+        run: python -m scripts.security.security_audit
+
+      # ==============================
+      # 12. RENDIMIENTO (NUEVO EV3)
+      # ==============================
+      - name: Run performance monitor
+        run: python -m scripts.performance.performance_monitor
+
+      # ==============================
+      # 13. ARTIFACTS - LOGS
+      # ==============================
       - name: Upload logs
         uses: actions/upload-artifact@v4
         with:
           name: pipeline-logs
           path: logs/
+
+      # ==============================
+      # 14. ARTIFACTS - DATOS
+      # ==============================
       - name: Upload processed datasets
         uses: actions/upload-artifact@v4
         with:
@@ -64,8 +145,48 @@ jobs:
             data/processed/
             data/validated/
             data/reject/
-      - name: Pipeline completed
+            data/outputs/
+
+      # ==============================
+      # 15. ARTIFACTS - MODELO
+      # ==============================
+      - name: Upload model artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: model-artifacts
+          path: |
+            models/bank_model.pkl
+            models/encoder.pkl
+
+      # ==============================
+      # 16. ARTIFACTS - REPORTES
+      # ==============================
+      - name: Upload reports and figures
+        uses: actions/upload-artifact@v4
+        with:
+          name: reports
+          path: |
+            reports/figures/
+            data/outputs/model_metrics.json
+            data/outputs/performance_report.json
+            data/outputs/data_quality_report.csv
+
+      # ==============================
+      # 17. RESUMEN FINAL
+      # ==============================
+      - name: Pipeline summary
         run: |
-          echo "====================================="
-          echo "PIPELINE EJECUTADO CORRECTAMENTE"
-          echo "====================================="
+          echo "============================================"
+          echo "PIPELINE EV3 EJECUTADO CORRECTAMENTE"
+          echo "============================================"
+          echo "ETL:         OK"
+          echo "EDA:         OK"
+          echo "Modelo IA:   OK"
+          echo "Seguridad:   OK"
+          echo "Rendimiento: OK"
+          echo "============================================"
+          echo "Metricas del modelo:"
+          cat data/outputs/model_metrics.json
+          echo ""
+          echo "Reporte calidad:"
+          head -5 data/outputs/data_quality_report.csv

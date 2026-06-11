@@ -1,4 +1,8 @@
 services:
+
+  # ============================================
+  # SERVICIO PRINCIPAL: PIPELINE ETL + IA
+  # ============================================
   bank-pipeline:
     build: .
     container_name: bank_marketing_pipeline
@@ -9,11 +13,44 @@ services:
     volumes:
       - ./data:/app/data
       - ./logs:/app/logs
+      - ./models:/app/models
+      - ./reports:/app/reports
     command: >
       sh -c "
-      python scripts/ingest/ingestion_data.py &&
-      python scripts/cleaning/cleaning_data.py &&
-      python scripts/transform/transform_data.py &&
-      python scripts/validation/validation_data.py &&
-      python scripts/load/loading_data.py
+      python -m scripts.ingest.ingestion_data &&
+      python -m scripts.cleaning.cleaning_data &&
+      python -m scripts.transform.transform_data &&
+      python -m scripts.validation.validation_data &&
+      python -m scripts.load.loading_data &&
+      python -m scripts.eda.quality_analysis &&
+      python -m scripts.eda.visual_eda &&
+      python -m scripts.modeling.train_model &&
+      python -m scripts.modeling.evaluate_model &&
+      python -m scripts.security.security_audit &&
+      python -m scripts.performance.performance_monitor
       "
+
+  # ============================================
+  # SERVICIO DASHBOARD: STREAMLIT
+  # ============================================
+  bank-dashboard:
+    build: .
+    container_name: bank_marketing_dashboard
+    env_file:
+      - .env
+    environment:
+      - PYTHONPATH=/app
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./models:/app/models
+      - ./reports:/app/reports
+    ports:
+      - "8501:8501"
+    command: >
+      sh -c "streamlit run dashboard/app.py
+      --server.port=8501
+      --server.address=0.0.0.0
+      --server.headless=true"
+    depends_on:
+      - bank-pipeline
