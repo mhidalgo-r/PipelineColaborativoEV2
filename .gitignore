@@ -18,16 +18,26 @@ logs/*
 !logs/.gitkeep
 
 # ============================================
+# Graficos Generados
+# ============================================
+
+reports/figures/*
+!reports/figures/.gitkeep
+
+
+# ============================================
 # DATOS GENERADOS POR EL PIPELINE
 # ============================================
 
 data/raw/*
+data/outputs/*
 data/processed/*
 data/validated/*
 data/reject/*
 
 # MANTENER ESTRUCTURA
 !data/raw/.gitkeep
+!data/outputs/.gitkeep
 !data/processed/.gitkeep
 !data/validated/.gitkeep
 !data/reject/.gitkeep

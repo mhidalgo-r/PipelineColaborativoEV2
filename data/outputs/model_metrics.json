@@ -4,5 +4,166 @@
     "recall": 0.7669,
     "f1": 0.7809,
     "auc": 0.8697,
-    "gini": 0.7394
+    "gini": 0.7394,
+    "model_comparison": {
+        "logistic_regression": {
+            "accuracy": 0.7961,
+            "precision": 0.7954,
+            "recall": 0.7669,
+            "f1": 0.7809,
+            "auc": 0.8697,
+            "gini": 0.7394
+        },
+        "decision_tree": {
+            "accuracy": 0.8167,
+            "precision": 0.8024,
+            "recall": 0.8135,
+            "f1": 0.8079,
+            "auc": 0.8811,
+            "gini": 0.7623
+        },
+        "winner": "decision_tree"
+    },
+    "feature_importance": {
+        "logistic_regression": [
+            {
+                "feature": "housing",
+                "importance_pct": 31.72
+            },
+            {
+                "feature": "loan",
+                "importance_pct": 27.32
+            },
+            {
+                "feature": "contact",
+                "importance_pct": 17.48
+            },
+            {
+                "feature": "education",
+                "importance_pct": 5.88
+            },
+            {
+                "feature": "age_group",
+                "importance_pct": 4.51
+            },
+            {
+                "feature": "default",
+                "importance_pct": 3.73
+            },
+            {
+                "feature": "campaign",
+                "importance_pct": 3.7
+            },
+            {
+                "feature": "previous",
+                "importance_pct": 3.03
+            },
+            {
+                "feature": "poutcome",
+                "importance_pct": 0.99
+            },
+            {
+                "feature": "marital",
+                "importance_pct": 0.62
+            },
+            {
+                "feature": "day",
+                "importance_pct": 0.31
+            },
+            {
+                "feature": "age",
+                "importance_pct": 0.23
+            },
+            {
+                "feature": "job",
+                "importance_pct": 0.14
+            },
+            {
+                "feature": "month",
+                "importance_pct": 0.14
+            },
+            {
+                "feature": "duration",
+                "importance_pct": 0.14
+            },
+            {
+                "feature": "pdays",
+                "importance_pct": 0.05
+            },
+            {
+                "feature": "balance",
+                "importance_pct": 0.0
+            }
+        ],
+        "decision_tree": [
+            {
+                "feature": "duration",
+                "importance_pct": 58.45
+            },
+            {
+                "feature": "contact",
+                "importance_pct": 12.69
+            },
+            {
+                "feature": "pdays",
+                "importance_pct": 9.24
+            },
+            {
+                "feature": "month",
+                "importance_pct": 6.02
+            },
+            {
+                "feature": "housing",
+                "importance_pct": 5.48
+            },
+            {
+                "feature": "poutcome",
+                "importance_pct": 4.14
+            },
+            {
+                "feature": "balance",
+                "importance_pct": 1.77
+            },
+            {
+                "feature": "age",
+                "importance_pct": 0.72
+            },
+            {
+                "feature": "campaign",
+                "importance_pct": 0.48
+            },
+            {
+                "feature": "loan",
+                "importance_pct": 0.36
+            },
+            {
+                "feature": "day",
+                "importance_pct": 0.33
+            },
+            {
+                "feature": "previous",
+                "importance_pct": 0.31
+            },
+            {
+                "feature": "job",
+                "importance_pct": 0.0
+            },
+            {
+                "feature": "marital",
+                "importance_pct": 0.0
+            },
+            {
+                "feature": "education",
+                "importance_pct": 0.0
+            },
+            {
+                "feature": "default",
+                "importance_pct": 0.0
+            },
+            {
+                "feature": "age_group",
+                "importance_pct": 0.0
+            }
+        ]
+    }
 }
