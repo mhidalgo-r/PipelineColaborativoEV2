@@ -1,144 +1,144 @@
 {
     "environment": "local",
-    "timestamp": "2026-06-11 17:15:51",
+    "timestamp": "2026-06-20 21:02:14",
     "system": {
-        "cpu_percent": 6.0,
+        "cpu_percent": 22.5,
         "ram_total_gb": 15.71,
-        "ram_used_gb": 10.22,
-        "ram_percent": 65.1
+        "ram_used_gb": 11.4,
+        "ram_percent": 72.6
     },
-    "total_execution_time_sec": 24.92,
+    "total_execution_time_sec": 23.82,
     "stages": [
         {
             "stage": "Ingestion",
             "status": "OK",
-            "execution_time_sec": 0.1424,
-            "cpu_percent": 16.6,
-            "ram_used_gb": 10.27,
+            "execution_time_sec": 0.1735,
+            "cpu_percent": 17.9,
+            "ram_used_gb": 11.41,
             "ram_delta_gb": 0.01,
-            "timestamp": "2026-06-11 17:14:53"
+            "timestamp": "2026-06-20 21:01:37"
         },
         {
             "stage": "Cleaning",
             "status": "OK",
-            "execution_time_sec": 0.1949,
-            "cpu_percent": 8.3,
-            "ram_used_gb": 10.27,
-            "ram_delta_gb": 0.0,
-            "timestamp": "2026-06-11 17:14:54"
+            "execution_time_sec": 0.2539,
+            "cpu_percent": 24.3,
+            "ram_used_gb": 11.4,
+            "ram_delta_gb": -0.01,
+            "timestamp": "2026-06-20 21:01:38"
         },
         {
             "stage": "Transformation",
             "status": "OK",
-            "execution_time_sec": 0.6991,
-            "cpu_percent": 3.2,
-            "ram_used_gb": 10.26,
-            "ram_delta_gb": -0.02,
-            "timestamp": "2026-06-11 17:14:55"
+            "execution_time_sec": 1.1263,
+            "cpu_percent": 17.2,
+            "ram_used_gb": 11.4,
+            "ram_delta_gb": 0.0,
+            "timestamp": "2026-06-20 21:01:40"
         },
         {
             "stage": "Validation",
             "status": "OK",
-            "execution_time_sec": 0.318,
-            "cpu_percent": 29.5,
-            "ram_used_gb": 10.34,
-            "ram_delta_gb": 0.08,
-            "timestamp": "2026-06-11 17:14:57"
+            "execution_time_sec": 0.3902,
+            "cpu_percent": 15.8,
+            "ram_used_gb": 11.42,
+            "ram_delta_gb": 0.02,
+            "timestamp": "2026-06-20 21:01:42"
         },
         {
             "stage": "Loading",
             "status": "OK",
-            "execution_time_sec": 15.5094,
-            "cpu_percent": 7.9,
-            "ram_used_gb": 10.36,
-            "ram_delta_gb": -0.06,
-            "timestamp": "2026-06-11 17:15:14"
+            "execution_time_sec": 14.1717,
+            "cpu_percent": 15.5,
+            "ram_used_gb": 11.41,
+            "ram_delta_gb": -0.01,
+            "timestamp": "2026-06-20 21:01:57"
         },
         {
             "stage": "EDA Quality",
             "status": "OK",
-            "execution_time_sec": 0.1726,
-            "cpu_percent": 25.0,
-            "ram_used_gb": 10.36,
+            "execution_time_sec": 0.1727,
+            "cpu_percent": 16.1,
+            "ram_used_gb": 11.4,
             "ram_delta_gb": -0.01,
-            "timestamp": "2026-06-11 17:15:15"
+            "timestamp": "2026-06-20 21:01:58"
         },
         {
             "stage": "EDA Visual",
             "status": "OK",
-            "execution_time_sec": 5.3213,
-            "cpu_percent": 20.3,
-            "ram_used_gb": 10.33,
-            "ram_delta_gb": 0.11,
-            "timestamp": "2026-06-11 17:15:38"
+            "execution_time_sec": 4.7111,
+            "cpu_percent": 19.9,
+            "ram_used_gb": 11.43,
+            "ram_delta_gb": 0.03,
+            "timestamp": "2026-06-20 21:02:04"
         },
         {
             "stage": "Training",
             "status": "OK",
-            "execution_time_sec": 1.6719,
-            "cpu_percent": 2.8,
-            "ram_used_gb": 10.45,
-            "ram_delta_gb": 0.01,
-            "timestamp": "2026-06-11 17:15:43"
+            "execution_time_sec": 1.7853,
+            "cpu_percent": 10.5,
+            "ram_used_gb": 11.42,
+            "ram_delta_gb": -0.01,
+            "timestamp": "2026-06-20 21:02:07"
         },
         {
             "stage": "Evaluation",
             "status": "OK",
-            "execution_time_sec": 0.7426,
-            "cpu_percent": 11.1,
-            "ram_used_gb": 10.45,
-            "ram_delta_gb": 0.0,
-            "timestamp": "2026-06-11 17:15:45"
+            "execution_time_sec": 1.0242,
+            "cpu_percent": 12.8,
+            "ram_used_gb": 11.41,
+            "ram_delta_gb": -0.01,
+            "timestamp": "2026-06-20 21:02:09"
         },
         {
             "stage": "Security Audit",
             "status": "OK",
-            "execution_time_sec": 0.1469,
-            "cpu_percent": 5.9,
-            "ram_used_gb": 10.45,
-            "ram_delta_gb": 0.0,
-            "timestamp": "2026-06-11 17:15:46"
+            "execution_time_sec": 0.0144,
+            "cpu_percent": 19.3,
+            "ram_used_gb": 11.43,
+            "ram_delta_gb": 0.02,
+            "timestamp": "2026-06-20 21:02:10"
         }
     ],
     "bottlenecks": {
         "tiempo": {
             "cuello_de_botella": "Loading",
-            "tiempo_sec": 15.5094,
-            "etapa_mas_rapida": "Ingestion",
-            "tiempo_min_sec": 0.1424,
-            "promedio_sec": 2.4919
+            "tiempo_sec": 14.1717,
+            "etapa_mas_rapida": "Security Audit",
+            "tiempo_min_sec": 0.0144,
+            "promedio_sec": 2.3823
         },
         "cpu": {
-            "etapa_mayor_cpu": "Validation",
-            "cpu_percent": 29.5
+            "etapa_mayor_cpu": "Cleaning",
+            "cpu_percent": 24.3
         },
         "ram": {
             "etapa_mayor_consumo": "EDA Visual",
-            "ram_delta_gb": 0.11
+            "ram_delta_gb": 0.03
         }
     },
     "stability": {
         "etapa_analizada": "EDA Quality",
         "runs": 3,
         "tiempos_sec": [
-            0.144,
-            0.1151,
-            0.1195
+            0.1759,
+            0.2121,
+            0.2009
         ],
-        "promedio_sec": 0.1262,
-        "max_sec": 0.144,
-        "min_sec": 0.1151,
-        "variacion_sec": 0.0289,
+        "promedio_sec": 0.1963,
+        "max_sec": 0.2121,
+        "min_sec": 0.1759,
+        "variacion_sec": 0.0362,
         "sistema_estable": true
     },
     "latency_db": {
         "pings": [
-            2.298,
-            0.4087,
-            0.3231
+            1.8765,
+            0.3076,
+            0.3049
         ],
-        "promedio_sec": 1.0099,
-        "max_sec": 2.298,
-        "min_sec": 0.3231
+        "promedio_sec": 0.8297,
+        "max_sec": 1.8765,
+        "min_sec": 0.3049
     }
 }

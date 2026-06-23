@@ -345,17 +345,22 @@ if perf and "stages" in perf:
 
         sys_info = perf.get("system", {})
         p1, p2, p3 = st.columns(3)
-        p1.metric("CPU Sistema",   f"{sys_info.get('cpu_percent', 'N/A')}%")
-        p2.metric("RAM Usada",     f"{sys_info.get('ram_used_gb', 'N/A')}GB")
-        p3.metric("Tiempo Total",  f"{perf.get('total_execution_time_sec', 'N/A')}s")
+        p1.metric(
+            "CPU Sistema",
+            f"{sys_info.get('cpu_percent', 'N/A')}%",
+            help="Porcentaje de uso del procesador del computador en el momento de ejecutar el pipeline. Un valor alto indica que el equipo estaba trabajando intensamente durante el proceso."
+        )
+        p2.metric(
+            "RAM Usada",
+            f"{sys_info.get('ram_used_gb', 'N/A')}GB",
+            help="Cantidad de memoria RAM que estaba en uso en el computador durante la ejecución del pipeline. No es exclusiva del pipeline, incluye también otros programas abiertos."
+        )
+        p3.metric(
+            "Tiempo Total",
+            f"{perf.get('total_execution_time_sec', 'N/A')}s",
+            help="Suma de los tiempos de ejecución de todas las etapas del pipeline, desde la ingesta hasta la auditoría de seguridad."
+        )
 
-        bottlenecks = perf.get("bottlenecks", {})
-        if bottlenecks:
-            tiempo_info = bottlenecks.get("tiempo", {})
-            st.info(
-                f"⚠️ Cuello de botella: **{tiempo_info.get('cuello_de_botella', 'N/A')}** "
-                f"con {tiempo_info.get('tiempo_sec', 'N/A')}s"
-            )
 else:
     st.warning(
         "Datos de rendimiento no disponibles. "
