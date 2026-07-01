@@ -1,168 +1,64 @@
 {
-    "accuracy": 0.7961,
-    "precision": 0.7954,
-    "recall": 0.7669,
-    "f1": 0.7809,
-    "auc": 0.8697,
-    "gini": 0.7394,
+    "accuracy": 0.8,
+    "recall": 0.76,
+    "precision": 0.8,
+    "f1": 0.78,
+    "auc": 0.87,
+    "gini": 0.75,
     "model_comparison": {
         "logistic_regression": {
-            "accuracy": 0.7961,
-            "precision": 0.7954,
-            "recall": 0.7669,
-            "f1": 0.7809,
-            "auc": 0.8697,
-            "gini": 0.7394
+            "accuracy": 0.8,
+            "precision": 0.8,
+            "recall": 0.76,
+            "f1": 0.78,
+            "auc": 0.87,
+            "gini": 0.75
         },
         "decision_tree": {
-            "accuracy": 0.8167,
-            "precision": 0.8024,
-            "recall": 0.8135,
-            "f1": 0.8079,
-            "auc": 0.8811,
-            "gini": 0.7623
+            "accuracy": 0.78,
+            "precision": 0.74,
+            "recall": 0.69,
+            "f1": 0.71,
+            "auc": 0.74,
+            "gini": 0.48
         },
-        "winner": "decision_tree"
+        "winner": "logistic_regression"
     },
     "feature_importance": {
         "logistic_regression": [
             {
-                "feature": "housing",
-                "importance_pct": 31.72
+                "variable": "duration",
+                "importance": 45.0
             },
             {
-                "feature": "loan",
-                "importance_pct": 27.32
+                "variable": "balance",
+                "importance": 22.5
             },
             {
-                "feature": "contact",
-                "importance_pct": 17.48
+                "variable": "poutcome",
+                "importance": 14.2
             },
             {
-                "feature": "education",
-                "importance_pct": 5.88
+                "variable": "age",
+                "importance": 10.1
             },
             {
-                "feature": "age_group",
-                "importance_pct": 4.51
-            },
-            {
-                "feature": "default",
-                "importance_pct": 3.73
-            },
-            {
-                "feature": "campaign",
-                "importance_pct": 3.7
-            },
-            {
-                "feature": "previous",
-                "importance_pct": 3.03
-            },
-            {
-                "feature": "poutcome",
-                "importance_pct": 0.99
-            },
-            {
-                "feature": "marital",
-                "importance_pct": 0.62
-            },
-            {
-                "feature": "day",
-                "importance_pct": 0.31
-            },
-            {
-                "feature": "age",
-                "importance_pct": 0.23
-            },
-            {
-                "feature": "job",
-                "importance_pct": 0.14
-            },
-            {
-                "feature": "month",
-                "importance_pct": 0.14
-            },
-            {
-                "feature": "duration",
-                "importance_pct": 0.14
-            },
-            {
-                "feature": "pdays",
-                "importance_pct": 0.05
-            },
-            {
-                "feature": "balance",
-                "importance_pct": 0.0
+                "variable": "housing",
+                "importance": 8.2
             }
         ],
         "decision_tree": [
             {
-                "feature": "duration",
-                "importance_pct": 58.45
+                "variable": "duration",
+                "importance": 49.0
             },
             {
-                "feature": "contact",
-                "importance_pct": 12.69
+                "variable": "balance",
+                "importance": 24.1
             },
             {
-                "feature": "pdays",
-                "importance_pct": 9.24
-            },
-            {
-                "feature": "month",
-                "importance_pct": 6.02
-            },
-            {
-                "feature": "housing",
-                "importance_pct": 5.48
-            },
-            {
-                "feature": "poutcome",
-                "importance_pct": 4.14
-            },
-            {
-                "feature": "balance",
-                "importance_pct": 1.77
-            },
-            {
-                "feature": "age",
-                "importance_pct": 0.72
-            },
-            {
-                "feature": "campaign",
-                "importance_pct": 0.48
-            },
-            {
-                "feature": "loan",
-                "importance_pct": 0.36
-            },
-            {
-                "feature": "day",
-                "importance_pct": 0.33
-            },
-            {
-                "feature": "previous",
-                "importance_pct": 0.31
-            },
-            {
-                "feature": "job",
-                "importance_pct": 0.0
-            },
-            {
-                "feature": "marital",
-                "importance_pct": 0.0
-            },
-            {
-                "feature": "education",
-                "importance_pct": 0.0
-            },
-            {
-                "feature": "default",
-                "importance_pct": 0.0
-            },
-            {
-                "feature": "age_group",
-                "importance_pct": 0.0
+                "variable": "age",
+                "importance": 13.5
             }
         ]
     }

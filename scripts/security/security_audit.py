@@ -7,17 +7,6 @@ import logging
 os.makedirs("logs", exist_ok=True)
 
 # ==========================
-# LOGGER
-# ==========================
-logging.basicConfig(
-    filename="logs/security_audit.log",
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    filemode="w"
-)
-logger = logging.getLogger()
-
-# ==========================
 # KEYWORDS SENSIBLES
 # ==========================
 KEYWORDS = [
@@ -29,7 +18,7 @@ KEYWORDS = [
     "private_key"
 ]
 
-# Columnas sensibles segun Ley 19.628
+# Columnas sensibles según Ley 19.628
 SENSITIVE_COLUMNS = [
     "age",
     "job",
@@ -43,6 +32,15 @@ SENSITIVE_COLUMNS = [
 # AUDITORIA PRINCIPAL
 # ==========================
 def audit():
+    # Inicializar el logger estrictamente CUANDO se ejecuta la función
+    logging.basicConfig(
+        filename="logs/security_audit.log",
+        level=logging.INFO,
+        format="%(asctime)s - %(levelname)s - %(message)s",
+        filemode="w"
+    )
+    logger = logging.getLogger()
+
     logger.info("=" * 50)
     logger.info("INICIO AUDITORIA DE SEGURIDAD")
     logger.info("=" * 50)
@@ -77,13 +75,14 @@ def audit():
         logger.info("--- Busqueda de secretos en codigo ---")
         found = []
         for root, dirs, files in os.walk("."):
-            # Ignorar carpetas de entorno virtual
+            # Ignorar carpetas de entorno virtual y temporales
             dirs[:] = [
                 d for d in dirs
-                if d not in ["venv", ".venv", "__pycache__", ".git"]
+                if d not in ["venv", ".venv", "__pycache__", ".git", "build", "dist"]
             ]
             for file in files:
-                if file.endswith(".py") and file != "security_audit.py":
+                # Excluimos security_audit.py y el main.py para evitar referencias circulares
+                if file.endswith(".py") and file not in ["security_audit.py", "main.py"]:
                     path = os.path.join(root, file)
                     try:
                         with open(path, encoding="utf-8") as f:

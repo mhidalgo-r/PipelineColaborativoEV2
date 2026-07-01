@@ -1,7 +1,7 @@
 """
 main.py
 ========
-Punto de entrada unico del proyecto Pipeline Bank Marketing EV3.
+Punto de entrada único del proyecto Pipeline Bank Marketing EV3.
 
 Ejecuta en orden:
 1. ETL (ingesta, limpieza, transformacion, validacion, carga)
@@ -26,9 +26,9 @@ import importlib
 # Cada tupla: (Nombre visible, modulo, funcion a ejecutar)
 # ==========================
 STAGES = [
-    ("Ingesta",              "scripts.ingest.ingestion_data",      "ingest_data"),
-    ("Limpieza",             "scripts.cleaning.cleaning_data",     "clean_data"),
-    ("Transformacion",       "scripts.transform.transform_data",   "transform_data"),
+    ("Ingesta",              "scripts.ingest.ingestion_data",     "ingest_data"),
+    ("Limpieza",             "scripts.cleaning.cleaning_data",    "clean_data"),
+    ("Transformacion",       "scripts.transform.transform_data",  "transform_data"),
     ("Validacion",           "scripts.validation.validation_data", "validate_data"),
     ("Carga",                "scripts.load.loading_data",          "load_data"),
     ("Calidad de Datos",     "scripts.eda.quality_analysis",       "analyze_data"),
@@ -50,15 +50,21 @@ def run_stage(stage_name, module_name, func_name):
     print_header(f"ETAPA: {stage_name}")
     start = time.time()
     try:
+        # Si el módulo ya fue cargado previamente por efectos secundarios, lo removemos
+        # para forzar una carga limpia y aislada de la etapa actual.
+        if module_name in sys.modules:
+            del sys.modules[module_name]
+            
         module = importlib.import_module(module_name)
         func = getattr(module, func_name)
         func()
+        
         elapsed = round(time.time() - start, 2)
         print(f"\n[OK] {stage_name} completada en {elapsed}s")
         return True
     except Exception as e:
         elapsed = round(time.time() - start, 2)
-        print(f"\n[ERROR] {stage_name} fallo despues de {elapsed}s")
+        print(f"\n[ERROR] {stage_name} falló después de {elapsed}s")
         print(f"Detalle: {e}")
         return False
 
@@ -71,12 +77,17 @@ def run_pipeline():
     for stage_name, module_name, func_name in STAGES:
         ok = run_stage(stage_name, module_name, func_name)
         results.append((stage_name, ok))
+        
+        # Parada de emergencia si una etapa base del ETL llega a fallar catastróficamente
+        if not ok and stage_name in ["Ingesta", "Limpieza", "Transformacion"]:
+            print(f"\n[CRÍTICO] Deteniendo el pipeline preventivamente: Falla estructural en {stage_name}")
+            break
 
     total_elapsed = round(time.time() - total_start, 2)
 
-    print_header("RESUMEN DE EJECUCION")
+    print_header("RESUMEN DE EJECUCIÓN")
     for stage_name, ok in results:
-        status = "OK" if ok else "FALLO"
+        status = "OK" if ok else "FALLÓ"
         print(f"  [{status}] {stage_name}")
 
     failed = [name for name, ok in results if not ok]
@@ -85,7 +96,7 @@ def run_pipeline():
 
     if failed:
         print(f"\nEtapas con error: {', '.join(failed)}")
-        print("Revisa los logs en la carpeta logs/ para mas detalle.")
+        print("Revisa los logs en la carpeta logs/ para más detalle.")
         return False
     else:
         print("\nTodas las etapas se ejecutaron correctamente.")
@@ -106,6 +117,9 @@ def run_dashboard():
         print(f"\n[ERROR] No se pudo iniciar el dashboard: {e}")
 
 
+# ==============================================================================
+# 🔥 PUNTO DE ENTRADA PRINCIPAL ÚNICO
+# ==============================================================================
 if __name__ == "__main__":
     no_dashboard = "--no-dash" in sys.argv
 
