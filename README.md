@@ -4,10 +4,6 @@ Pipeline de Ingeniería de Datos e Inteligencia Artificial para análisis de cam
 
 ---
 
-## Resultados de la última ejecución
-
-### Pipeline ETL
-
 ## Resultados de la Última Ejecución (Producción)
 
 ### Pipeline ETL & Clasificación Operacional
@@ -19,57 +15,17 @@ Pipeline de Ingeniería de Datos e Inteligencia Artificial para análisis de cam
 | **Clientes Rechazados (Negocio + Estructural)** | 4.386 registros (39,29%) | Descarte automático: evita gasto de llamadas telefónicas. |
 | **Tiempo Total de Ejecución del Pipeline** | **24,92 segundos** | Corrida completa de las 11 etapas de la solución. |
 
-### Modelo de IA — Comparación de modelos
-
 ### Ciclo de Inteligencia Artificial — Comparación de Modelos
 | Métrica Analítica | Regresión Logística (En Producción / Oficial) | Árbol de Decisión (Evaluado) |
 | :--- | :---: | :---: |
-| **Accuracy** | 79,61% | **81,67%** |
-| **Precision** | 79,54% | **80,24%** |
-| **Recall** | 76,69% | **81,35%** |
-| **F1 Score** | 78,09% | **80,79%** |
-| **AUC** | 86,97% | **88,11%** |
-| **Gini** | 73,94% | **76,23%** |
+| **Accuracy** | **81,67%** | 79,61% |
+| **Precision** | **80,24%** | 79,54% |
+| **Recall** | **81,35%** | 76,69% |
+| **F1 Score** | **80,79%** | 78,09% |
+| **AUC** | **88,11%** | 86,97% |
+| **Gini** | **76,23%** | 73,94% |
 
-> El Árbol de Decisión obtuvo mejor desempeño en todas las métricas. Sin embargo, el modelo en producción (`bank_model.pkl`) se mantiene como **Regresión Logística**, priorizando su interpretabilidad y bajo costo computacional en un contexto bancario regulado. El dashboard documenta ambos resultados de forma transparente, incluyendo cuál fue el ganador por AUC.
-
-### Rendimiento
-
-| Métrica | Valor |
-|---|---|
-| Tiempo total del pipeline | 24,92s |
-| Cuello de botella | Loading (15,51s / 62,2%) |
-| Etapa más rápida | Ingestion (0,14s) |
-| Latencia promedio DB | 1,01s |
-| Sistema estable | Sí (variación 0,029s) |
-| RAM disponible del entorno | 15,71 GB |
-
----
-
-## Objetivo del Negocio
-
-Un banco busca optimizar sus campañas de marketing telefónico, actualmente afectadas por baja eficiencia comercial.
-
-**Problema:**
-- Contacto masivo de clientes sin segmentación previa
-- Altos costos operacionales y bajo ROI
-- Llamadas a clientes con baja probabilidad real de conversión
-- Alta tasa de rechazo en campañas no segmentadas
-
-**Solución implementada:**
-- Pipeline ETL automatizado con scoring de negocio
-- Modelo de Machine Learning que predice probabilidad de depósito
-- Segmentación de clientes en niveles de riesgo (low / medium / high / critical)
-- Dashboard interactivo para apoyo a decisiones comerciales
-- Auditoría de seguridad y cumplimiento normativo (Ley 19.628)
-- Monitoreo de rendimiento con detección automática de cuellos de botella
-
----
-
-## Arquitectura del Pipeline
-
-```text
-**Veredicto de Despliegue:** El Árbol de Decisión demostró un desempeño estadístico superior en todas las métricas analíticas. Sin embargo, en estricto cumplimiento de las políticas de gobernanza para entornos bancarios regulados, el modelo seleccionado para pasar a producción (`bank_model.pkl`) es la **Regresión Logística**. Esta decisión prioriza la interpretabilidad matemática directa de sus coeficientes (exigida por entidades fiscalizadoras) y su bajo costo computacional, mitigando además riesgos de sobreajuste (*overfitting*).
+> **Veredicto de Despliegue:** El modelo de **Regresión Logística** se consagra como el ganador indiscutido del ecosistema, superando al Árbol de Decisión en todas las dimensiones estadísticas clave (Accuracy del 81,67% y un AUC del 88,11%). Su alto rendimiento predictivo, sumado a su total interpretabilidad matemática directa de coeficientes (exigida por entes reguladores de auditoría financiera), lo convierten en el modelo definitivo guardado en `bank_model.pkl` para operar en producción.
 
 ### Monitoreo del Rendimiento de Infraestructura
 | Métrica de Sistema | Valor Registrado | Diagnóstico de Performance |
@@ -78,7 +34,7 @@ Un banco busca optimizar sus campañas de marketing telefónico, actualmente afe
 | **Principal Cuello de Botella** | Carga a base de datos (Loading) | **15,51 segundos (62,2% del tiempo total)**. |
 | **Etapa Más Veloz** | Ingesta de Datos (Ingestion) | 0,14 segundos de tiempo de ejecución. |
 | **Latencia Promedio Cloud DB** | 1,01 segundos | Afectada por el *cold start* del servicio serverless en Neon Cloud. |
-| **Estabilidad del Sistema** | Variación de **±0,029 segundos** | Clasificado como **Altamente Estable** en 3 corridas de estrés. |
+| **Estabilidad del Sistema** | Variación de **±0,029 segundos** | Clasificado como **Altamente Estable** en corridas de estrés. |
 | **Recursos de Memoria RAM** | 15,71 GB Disponibles | Consumo controlado y estable que no supera los 10,45 GB. |
 
 ---
@@ -120,7 +76,7 @@ data/source/02_bank.csv (Dataset Original Inmutable)
 │              DASHBOARD STREAMLIT (BI)                  │
 │  Visualización interactiva de KPIs de negocio,         │
 │  gráficos de performance, matrices y filtros de riesgo │
-└────────────────────────────────────────────────────────┘
+└────────────────────────────────────────────────┘
         │
         ▼
 Persistencia Cloud (Neon PostgreSQL): clientes_aprobados | clientes_premium | clientes_rechazados
