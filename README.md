@@ -25,7 +25,7 @@ Pipeline de Ingeniería de Datos e Inteligencia Artificial para análisis de cam
 | **AUC** | **88,11%** | 86,97% |
 | **Gini** | **76,23%** | 73,94% |
 
-> **Veredicto de Despliegue:** El modelo de **Regresión Logística** se consagra como el ganador indiscutido del ecosistema, superando al Árbol de Decisión en todas las dimensiones estadísticas clave (Accuracy del 81,67% y un AUC del 88,11%). Su alto rendimiento predictivo, sumado a su total interpretabilidad matemática directa de coeficientes (exigida por entes reguladores de auditoría financiera), lo convierten en el modelo definitivo guardado en `bank_model.pkl` para operar en producción.
+> **Veredicto de Despliegue:** El modelo de **Regresión Logística** se consagra como el ganador indiscutido de la solución, superando ampliamente al Árbol de Decisión en todas las dimensiones estadísticas y de negocio (Accuracy del 81,67%, F1 Score de 80,79% y un AUC del 88,11%). Al ser un modelo lineal de alta precisión, proporciona además una total transparencia e interpretabilidad matemática directa de sus coeficientes (requisito fundamental para auditorías en entornos bancarios regulados), consolidándose como el archivo definitivo serializado en `bank_model.pkl`.
 
 ### Monitoreo del Rendimiento de Infraestructura
 | Métrica de Sistema | Valor Registrado | Diagnóstico de Performance |
@@ -76,7 +76,7 @@ data/source/02_bank.csv (Dataset Original Inmutable)
 │              DASHBOARD STREAMLIT (BI)                  │
 │  Visualización interactiva de KPIs de negocio,         │
 │  gráficos de performance, matrices y filtros de riesgo │
-└────────────────────────────────────────────────┘
+└────────────────────────────────────────────────────────┘
         │
         ▼
 Persistencia Cloud (Neon PostgreSQL): clientes_aprobados | clientes_premium | clientes_rechazados
