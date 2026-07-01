@@ -8,24 +8,28 @@ Pipeline de Ingeniería de Datos e Inteligencia Artificial para análisis de cam
 
 ### Pipeline ETL
 
-| Métrica | Valor |
-|---|---|
-| Clientes procesados | 11.162 |
-| Clientes aprobados | 6.776 (60,71%) |
-| Clientes premium | 3.859 (56,95% de los aprobados) |
-| Clientes rechazados | 4.386 (39,29%) |
-| Tiempo total de ejecución | 24,92 segundos |
+## Resultados de la Última Ejecución (Producción)
+
+### Pipeline ETL & Clasificación Operacional
+| Métrica Operacional | Valor Real del Sistema | Impacto Estratégico |
+| :--- | :--- | :--- |
+| **Clientes Totales Procesados** | 11.162 registros | Universo total de la campaña evaluada. |
+| **Clientes Aprobados Comerciales** | 6.776 registros (60,71%) | Perfiles aptos que cumplen con las reglas semánticas. |
+| **Segmento de Clientes Premium** | 3.859 registros (56,95%) | Clientes prioritarios de alta propensión sin deudas vigentes. |
+| **Clientes Rechazados (Negocio + Estructural)** | 4.386 registros (39,29%) | Descarte automático: evita gasto de llamadas telefónicas. |
+| **Tiempo Total de Ejecución del Pipeline** | **24,92 segundos** | Corrida completa de las 11 etapas de la solución. |
 
 ### Modelo de IA — Comparación de modelos
 
-| Métrica | Regresión Logística | Árbol de Decisión |
-|---|---|---|
-| Accuracy | 79,61% | **81,67%** |
-| Precision | 79,54% | **80,24%** |
-| Recall | 76,69% | **81,35%** |
-| F1 Score | 78,09% | **80,79%** |
-| AUC | 86,97% | **88,11%** |
-| Gini | 73,94% | **76,23%** |
+### Ciclo de Inteligencia Artificial — Comparación de Modelos
+| Métrica Analítica | Regresión Logística (En Producción / Oficial) | Árbol de Decisión (Evaluado) |
+| :--- | :---: | :---: |
+| **Accuracy** | 79,61% | **81,67%** |
+| **Precision** | 79,54% | **80,24%** |
+| **Recall** | 76,69% | **81,35%** |
+| **F1 Score** | 78,09% | **80,79%** |
+| **AUC** | 86,97% | **88,11%** |
+| **Gini** | 73,94% | **76,23%** |
 
 > El Árbol de Decisión obtuvo mejor desempeño en todas las métricas. Sin embargo, el modelo en producción (`bank_model.pkl`) se mantiene como **Regresión Logística**, priorizando su interpretabilidad y bajo costo computacional en un contexto bancario regulado. El dashboard documenta ambos resultados de forma transparente, incluyendo cuál fue el ganador por AUC.
 
@@ -65,35 +69,61 @@ Un banco busca optimizar sus campañas de marketing telefónico, actualmente afe
 ## Arquitectura del Pipeline
 
 ```text
-data/source/02_bank.csv
+**Veredicto de Despliegue:** El Árbol de Decisión demostró un desempeño estadístico superior en todas las métricas analíticas. Sin embargo, en estricto cumplimiento de las políticas de gobernanza para entornos bancarios regulados, el modelo seleccionado para pasar a producción (`bank_model.pkl`) es la **Regresión Logística**. Esta decisión prioriza la interpretabilidad matemática directa de sus coeficientes (exigida por entidades fiscalizadoras) y su bajo costo computacional, mitigando además riesgos de sobreajuste (*overfitting*).
+
+### Monitoreo del Rendimiento de Infraestructura
+| Métrica de Sistema | Valor Registrado | Diagnóstico de Performance |
+| :--- | :--- | :--- |
+| **Tiempo Total del Pipeline** | 24,92 segundos | Consumo global del ciclo automatizado. |
+| **Principal Cuello de Botella** | Carga a base de datos (Loading) | **15,51 segundos (62,2% del tiempo total)**. |
+| **Etapa Más Veloz** | Ingesta de Datos (Ingestion) | 0,14 segundos de tiempo de ejecución. |
+| **Latencia Promedio Cloud DB** | 1,01 segundos | Afectada por el *cold start* del servicio serverless en Neon Cloud. |
+| **Estabilidad del Sistema** | Variación de **±0,029 segundos** | Clasificado como **Altamente Estable** en 3 corridas de estrés. |
+| **Recursos de Memoria RAM** | 15,71 GB Disponibles | Consumo controlado y estable que no supera los 10,45 GB. |
+
+---
+
+## Objetivo del Negocio
+
+Un banco busca optimizar sus campañas de marketing telefónico para la captación de depósitos a plazo, debido a la baja eficiencia en la asignación de su fuerza comercial.
+
+* **Problema Operacional:** El contacto masivo e indiscriminado de clientes sin segmentación genera altos costos por llamadas infructuosas, desgaste de ejecutivos, un bajo Retorno de la Inversión (ROI) y molestias en perfiles no aptos.
+* **Solución Implementada:** Un ecosistema automatizado de datos que combina un Pipeline ETL con reglas de negocio y un modelo de Machine Learning que predice con precisión el comportamiento de compra del cliente. Al descartar automáticamente el **39,29% de perfiles sin interés**, la fuerza de ventas se concentra de manera estratégica en el segmento de **3.859 clientes Premium**, transformando datos crudos en activos financieros medibles.
+
+---
+
+## Arquitectura de la Solución
+
+```text
+data/source/02_bank.csv (Dataset Original Inmutable)
         │
         ▼
-┌──────────────────────────────────────────────────────┐
-│                    PIPELINE ETL (EV2)                 │
+┌────────────────────────────────────────────────────────┐
+│                   PIPELINE ETL (EV2)                   │
 │                                                        │
-│  Ingesta → Limpieza → Transformación → Validación → Carga │
+│ Ingesta ──> Limpieza ──> Transformación ──> Validación │
 │                                                        │
-│  Salidas: clientes_aprobados | clientes_premium       │
-│           clientes_rechazados  (PostgreSQL + CSV)     │
-└──────────────────────────────────────────────────────┘
+│ Logs modulares: ingestion.log, cleaning.log, etc.     │
+└────────────────────────────────────────────────────────┘
         │
         ▼
-┌──────────────────────────────────────────────────────┐
-│              INTELIGENCIA ARTIFICIAL (EV3)            │
+┌────────────────────────────────────────────────────────┐
+│             INTELIGENCIA ARTIFICIAL (EV3)              │
 │                                                        │
-│  EDA Calidad → EDA Visual → Entrenamiento → Evaluación │
-│  Monitoreo de Rendimiento → Auditoría de Seguridad    │
-│                                                        │
-│  Salidas: bank_model.pkl | model_metrics.json         │
-│           reports/figures/ | performance_report.json  │
-└──────────────────────────────────────────────────────┘
+│  EDA de Calidad ──> EDA Visual ──> Split 70/30         │
+│  Entrenamiento de Modelos  ──> Serialización (.pkl)    │
+│  Auditoría de Seguridad ──> Monitor de Performance     │
+└────────────────────────────────────────────────────────┘
         │
         ▼
-┌──────────────────────────────────────────────────────┐
-│                  DASHBOARD STREAMLIT                  │
-│  Visualización de KPIs, métricas del modelo,          │
-│  comparación de modelos y filtros interactivos        │
-└──────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────┐
+│              DASHBOARD STREAMLIT (BI)                  │
+│  Visualización interactiva de KPIs de negocio,         │
+│  gráficos de performance, matrices y filtros de riesgo │
+└────────────────────────────────────────────────────────┘
+        │
+        ▼
+Persistencia Cloud (Neon PostgreSQL): clientes_aprobados | clientes_premium | clientes_rechazados
 ```
 
 ---
