@@ -861,7 +861,309 @@ Correcciones respecto a versiones anteriores:
 
 ---
 
-# 26. Próximas Mejoras
+---
+# 26. Cómo Ejecutar el Proyecto
+
+## Requisitos Previos
+
+Asegúrate de tener instalado:
+
+- Python 3.11+
+- Git
+- PostgreSQL (opcional si no usas Neon)
+- Docker (opcional)
+- pip
+- virtualenv
+
+Verificar versiones:
+
+```bash
+python --version
+pip --version
+git --version
+```
+
+---
+
+## 26.1 Clonar Repositorio
+
+```bash
+git clone -b feature/pipeline-ev3 https://github.com/mhidalgo-r/PipelineColaborativoEV2.git
+```
+
+Entrar a la carpeta:
+
+```bash
+cd PipelineColaborativoEV2
+```
+
+---
+
+## 26.2 Crear Entorno Virtual
+
+### Windows (PowerShell)
+
+```bash
+python -m venv venv
+```
+
+Activar:
+
+```bash
+venv\Scripts\activate
+```
+
+Si aparece `(venv)` en consola, quedó listo.
+
+---
+
+## 26.3 Instalar Dependencias
+
+```bash
+pip install -r requirements.txt
+```
+
+Esto instalará librerías como:
+
+- pandas
+- scikit-learn
+- streamlit
+- matplotlib
+- sqlalchemy
+- joblib
+- psutil
+
+---
+
+## 26.4 Configurar Variables de Entorno
+
+Crear archivo:
+
+```text
+.env
+```
+
+Ejemplo:
+
+```env
+DATABASE_URL=postgresql://usuario:password@host/database?sslmode=require
+```
+
+Si usas Neon:
+
+:contentReference[oaicite:0]{index=0}
+
+---
+
+# 26. Ejecutar Pipeline ETL + ML Completo
+
+Si tienes un `main.py` que orquesta todo:
+
+```bash
+python main.py
+```
+
+Esto ejecuta automáticamente:
+
+```text
+1. Ingestion
+2. Cleaning
+3. Transformation
+4. Validation
+5. Loading
+6. EDA
+7. Training
+8. Evaluation
+9. Security Audit
+```
+
+Salida esperada:
+
+```text
+Pipeline completed successfully
+```
+
+Archivos generados:
+
+```text
+data/validated/
+models/
+outputs/
+logs/
+```
+
+---
+
+## 26.1 Ejecutar Etapas Individuales
+
+Si quieres correr módulos por separado:
+
+### Ingesta
+
+```bash
+python scripts/ingest/ingestion_data.py
+```
+
+### Limpieza
+
+```bash
+python scripts/cleaning/cleaning_data.py
+```
+
+### Transformación
+
+```bash
+python scripts/transform/transform_data.py
+```
+
+### Validación
+
+```bash
+python scripts/validation/validation_data.py
+```
+
+### Carga
+
+```bash
+python scripts/load/loading_data.py
+```
+
+---
+
+# 27. Entrenar el Modelo Manualmente
+
+Si deseas entrenar solo el modelo:
+
+```bash
+python train_model.py
+```
+
+Esto:
+
+- carga dataset validado
+- aplica preprocessing
+- aplica StandardScaler
+- entrena Logistic Regression
+- guarda artefactos
+
+Modelos generados:
+
+```text
+models/
+├── bank_model.pkl
+├── scaler.pkl
+└── encoder.pkl
+```
+
+---
+
+# 28. Evaluar el Modelo
+
+Para calcular métricas:
+
+```bash
+python evaluate_model.py
+```
+
+Esto genera:
+
+- Accuracy
+- Precision
+- Recall
+- F1
+- AUC
+- Gini
+- Confusion Matrix
+- ROC Curve
+
+Salida ejemplo:
+
+```text
+Accuracy: 0.80
+Precision: 0.80
+Recall: 0.76
+F1: 0.78
+AUC: 0.87
+Gini: 0.75
+```
+
+---
+
+# 29. Ejecutar Dashboard
+
+Para levantar Streamlit:
+
+```bash
+streamlit run dashboard/app.py
+```
+
+Abrir navegador:
+
+```text
+http://localhost:8501
+```
+
+El dashboard permite:
+
+- visualizar KPIs
+- revisar métricas del modelo
+- analizar performance
+- simular predicciones
+
+---
+
+# 30. Inferencia / Predicción de Nuevos Clientes
+
+Una vez entrenado el modelo, se puede predecir la probabilidad de suscripción.
+
+Ejemplo:
+
+```python
+import joblib
+
+model = joblib.load("models/bank_model.pkl")
+scaler = joblib.load("models/scaler.pkl")
+
+prediction = model.predict(X)
+probability = model.predict_proba(X)
+```
+
+Salida:
+
+```text
+Prediction: Deposit = Yes
+Probability: 84%
+```
+
+Interpretación:
+
+- valor cercano a 1 → alta probabilidad
+- valor cercano a 0 → baja probabilidad
+
+---
+
+# 31. Ejecutar con Docker (Opcional)
+
+Construir imagen:
+
+```bash
+docker build -t bank-pipeline .
+```
+
+Ejecutar contenedor:
+
+```bash
+docker run bank-pipeline
+```
+
+Ventajas:
+
+- reproducibilidad
+- aislamiento
+- portabilidad
+
+---
+# 32. Próximas Mejoras
 
 Posibles mejoras futuras:
 
@@ -876,7 +1178,7 @@ Posibles mejoras futuras:
 
 ---
 
-# 27. Conclusión
+# 33. Conclusión
 
 El proyecto evolucionó desde un pipeline ETL tradicional hacia una solución **DataOps moderna con Machine Learning real**.
 
