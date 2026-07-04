@@ -407,6 +407,9 @@ python -m scripts.security.security_audit
 
 # Dashboard
 streamlit run dashboard/app.py
+
+#Todo en un comando
+python main.py
 ```
 
 El dashboard queda disponible en `http://localhost:8501`.
