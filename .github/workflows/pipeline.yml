@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - feature/pipeline-ev3
+      - feature/proyecto-final-corregido
   workflow_dispatch:
 
 env:
